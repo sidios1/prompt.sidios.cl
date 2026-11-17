@@ -3,6 +3,7 @@
   const P = window.PF;
   const C = window.PF_CATALOG;
   const $ = (id) => document.getElementById(id);
+  const track = (name, params) => { if (window.pfTrack) window.pfTrack(name, params); };
 
   const KEY_HISTORY = "promptforge.history.v1";
   const KEY_SETTINGS = "promptforge.settings.v1";
@@ -74,6 +75,7 @@
     const e = newEntry();
     entries.push(e);
     select(e.id, "rol");
+    track("nuevo_prompt");
   }
 
   function duplicate(id) {
@@ -469,6 +471,7 @@
       t.remove();
     }
     toast("Prompt copiado");
+    track("copiar_prompt", { formato: current().format });
   }
 
   function exportFile() {
@@ -482,15 +485,17 @@
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast("Exportado como " + name);
+    track("exportar_prompt", { formato: fmt.ext });
   }
 
   async function share() {
     const text = promptText();
     if (!text || !navigator.share) return;
-    try { await navigator.share({ title: P.entryTitle(current()), text }); } catch (_) {}
+    try { await navigator.share({ title: P.entryTitle(current()), text }); track("compartir_prompt"); } catch (_) {}
   }
 
   function loadExample() {
+    track("cargar_ejemplo");
     const e = current();
     e.values = {
       rol: "Eres un ingeniero experto en prompt engineering",

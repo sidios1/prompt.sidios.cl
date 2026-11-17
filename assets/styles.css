@@ -395,3 +395,21 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* Crédito */
+.hero-credit { margin-top: 20px; font-size: 17px; color: var(--text-2); }
+.hero-credit a { color: var(--link); }
+
+/* Aviso de cookies (Google Analytics) */
+.consent {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 90;
+  width: min(560px, calc(100vw - 32px));
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 16px 20px; border-radius: 18px; background: var(--pop); color: var(--text); box-shadow: var(--shadow);
+  font-size: 14px; line-height: 1.43; letter-spacing: -0.016em;
+}
+.consent p { flex: 1 1 260px; margin: 0; color: var(--text-2); }
+.consent-actions { display: flex; gap: 8px; margin-left: auto; }
+@media (max-width: 834px) {
+  .consent { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

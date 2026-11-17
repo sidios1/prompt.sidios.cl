@@ -29,8 +29,32 @@
   color-scheme: light dark;
 }
 
+/* Tema: sigue al sistema salvo que Ajustes fije data-theme="light" | "dark" en <html> */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-alt: #161617;
+  --tile: #1d1d1f;
+  --field: #1d1d1f;
+  --pop: #2c2c2e;
+  --text: #f5f5f7;
+  --text-2: #a1a1a6;
+  --text-3: #86868b;
+  --link: #2997ff;
+  --rule: #424245;
+  --nav-bg: rgba(22, 22, 23, 0.72);
+  --nav-rule: rgba(255, 255, 255, 0.12);
+  --seg-track: rgba(255, 255, 255, 0.08);
+  --seg-on: #636366;
+  --seg-on-ring: rgba(255, 255, 255, 0.04);
+  --hover: rgba(255, 255, 255, 0.06);
+  --active: rgba(41, 151, 255, 0.16);
+  --focus: rgba(41, 151, 255, 0.7);
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000000;
     --bg-alt: #161617;
     --tile: #1d1d1f;
@@ -97,6 +121,22 @@ button { font: inherit; color: inherit; letter-spacing: inherit; }
   line-height: var(--nav-h); white-space: nowrap; transition: opacity .15s ease;
 }
 .nav-btn:hover { opacity: 1; }
+
+/* Selector de tema: menú nativo con la apariencia de los demás enlaces de la barra */
+.nav-theme { position: relative; display: flex; align-self: center; align-items: center; gap: 5px; color: var(--text); opacity: 0.8; transition: opacity .15s ease; }
+.nav-theme:hover, .nav-theme:focus-within { opacity: 1; }
+.nav-theme-icon { width: 13px; height: 13px; flex: 0 0 auto; }
+.nav-theme select {
+  font-size: 12px; letter-spacing: -0.01em; color: inherit; background: transparent;
+  border: 0; border-radius: 6px; padding: 4px 14px 4px 0; line-height: 1.2;
+}
+.nav-theme::after {
+  content: ""; position: absolute; right: 2px; top: 50%; width: 5px; height: 5px; pointer-events: none;
+  border-right: 1.25px solid currentColor; border-bottom: 1.25px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+}
+.nav-theme select:focus { box-shadow: none; }
+.nav-theme select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* ===================== HERO ===================== */
 /* La página empieza directamente con la herramienta, bajo la barra fija */
@@ -289,11 +329,12 @@ footer { background: var(--bg-alt); color: var(--text-2); font-size: 12px; line-
 .dialog::backdrop { background: rgba(0,0,0,0.3); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .dialog-inner { padding: 28px; }
 .dialog-title { font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: 0.007em; margin-bottom: 20px; }
-.row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; border-top: 1px solid var(--rule); }
 .row > span:first-child { font-size: 17px; }
+.dialog .select-wrap.small select { width: 150px; }
 .row.check input { width: 20px; height: 20px; accent-color: var(--button); }
 .dialog .field-help { margin: 6px 0 16px; font-size: 13px; }
-.shortcuts { border-top: 1px solid var(--rule); padding-top: 16px; font-size: 14px; color: var(--text-2); display: grid; gap: 8px; }
+.shortcuts { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 0; font-size: 14px; color: var(--text-2); display: grid; gap: 8px; }
 .shortcuts .stack-label { margin-bottom: 4px; }
 kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1px 6px; color: var(--text); background: var(--seg-track); }
 .dialog-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
@@ -367,6 +408,11 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 @media (max-width: 734px) {
   /* iOS hace zoom al enfocar campos con letra < 16 px */
   .search, .select-wrap.small select { font-size: 16px; }
+  /* Tema en la barra: solo el ícono; el menú nativo (16 px, sin zoom) queda invisible encima */
+  .nav-theme { padding: 8px; margin: -8px; }
+  .nav-theme-icon { width: 16px; height: 16px; }
+  .nav-theme::after { display: none; }
+  .nav-theme select { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: 16px; padding: 0; }
   .history-close { font-size: 17px; }
 }
 

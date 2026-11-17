@@ -28,7 +28,22 @@
   const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 
   // ---------- Estado ----------
-  const settings = Object.assign({ format: "xml", feminine: false, spell: true }, readJSON(KEY_SETTINGS, {}));
+  const settings = Object.assign({ format: "xml", feminine: false, spell: true, theme: "system" }, readJSON(KEY_SETTINGS, {}));
+
+  // ---------- Tema ----------
+  // "system" sigue al sistema operativo; "light" y "dark" lo fijan. index.html lo aplica antes de pintar.
+  const darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
+  function applyTheme() {
+    const root = document.documentElement;
+    if (settings.theme === "light" || settings.theme === "dark") root.setAttribute("data-theme", settings.theme);
+    else root.removeAttribute("data-theme");
+    const dark = settings.theme === "dark" || (settings.theme !== "light" && darkMQ.matches);
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      if (settings.theme === "system") m.setAttribute("content", m.media.includes("dark") ? "#000000" : "#ffffff");
+      else m.setAttribute("content", dark ? "#000000" : "#ffffff");
+    });
+  }
+  applyTheme();
   let entries = (readJSON(KEY_HISTORY, []) || []).filter((e) => e && e.id && e.values);
   let selectedId = null;
   let search = "";
@@ -564,6 +579,8 @@
   // ---------- Ajustes ----------
   function initSettings() {
     const dlg = $("settings");
+    $("set-theme").value = settings.theme;
+    $("set-theme").addEventListener("change", (ev) => { settings.theme = ev.target.value; writeJSON(KEY_SETTINGS, settings); applyTheme(); });
     $("set-format").value = settings.format;
     $("set-feminine").value = settings.feminine ? "1" : "0";
     $("set-spell").checked = !!settings.spell;

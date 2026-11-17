@@ -10,6 +10,13 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>
+    // Aplica el tema guardado antes de pintar, para evitar un parpadeo de colores
+    try {
+      var t = JSON.parse(localStorage.getItem('promptforge.settings.v1') || '{}').theme;
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
 
   <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -24,6 +31,15 @@
         <button type="button" class="nav-btn" id="btn-new" title="Nuevo prompt (Alt+N)">Nuevo</button>
         <button type="button" class="nav-btn" id="btn-example">Ejemplo</button>
         <button type="button" class="nav-btn" id="btn-settings">Ajustes</button>
+        <label class="nav-theme" title="Tema">
+          <svg class="nav-theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg>
+          <span class="sr-only">Tema</span>
+          <select id="set-theme">
+            <option value="system">Automático</option>
+            <option value="light">Claro</option>
+            <option value="dark">Oscuro</option>
+          </select>
+        </label>
       </div>
     </div>
   </nav>

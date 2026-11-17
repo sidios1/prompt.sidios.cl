@@ -225,9 +225,19 @@
     requestAnimationFrame(() => P.FIELDS.forEach((f) => autosize(f.id)));
   }
 
+  // En escritorio la app cabe en una pantalla: las cajas se estiran por CSS y no se autoajustan.
+  const fitMQ = window.matchMedia("(min-width: 835px) and (min-height: 600px)");
+  function syncFitLayout() {
+    document.documentElement.classList.toggle("fit-layout", fitMQ.matches);
+    P.FIELDS.forEach((f) => autosize(f.id));
+  }
+  fitMQ.addEventListener("change", syncFitLayout);
+  document.documentElement.classList.toggle("fit-layout", fitMQ.matches);
+
   function autosize(field) {
     const ta = fieldRefs[field] && fieldRefs[field].ta;
     if (!ta) return;
+    if (fitMQ.matches) { ta.style.height = ""; ta.style.overflowY = ""; return; }
     const lh = parseFloat(getComputedStyle(ta).lineHeight) || 26;
     const max = lh * (field === "rol" ? 3 : 10) + 26;
     ta.style.height = "auto";

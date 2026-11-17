@@ -11,12 +11,6 @@
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
-  <script>
-    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.documentElement.classList.add('motion');
-    }
-  </script>
-
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
@@ -35,11 +29,8 @@
   </nav>
 
   <header class="hero wrap">
-    <p class="hero-kicker">Herramienta de prompt engineering</p>
     <h1 class="hero-name">PromptForge</h1>
-    <p class="hero-tagline">Cinco campos. Un prompt claro.</p>
-    <p class="hero-sub">Rol, contexto, objetivo, salida y restricciones, con sugerencias que se adaptan a lo que escribes.</p>
-    <p class="hero-credit">Creado por <a href="https://sidios.cl">Pablo Peña</a></p>
+    <p class="hero-sub">Arma prompts claros a partir de cinco campos, con sugerencias según lo que escribes.</p>
   </header>
 
   <main class="app wrap">
@@ -60,7 +51,6 @@
         <div class="select-wrap">
           <select id="domain"></select>
         </div>
-        <p class="field-help" id="domain-help"></p>
         <div class="form-actions">
           <button type="button" class="link-btn" id="btn-clear">Vaciar campos</button>
         </div>
@@ -80,9 +70,7 @@
         <div class="preview-body">
           <pre id="output" class="output" aria-live="polite"></pre>
           <div id="empty" class="empty">
-            <div class="empty-title">Sin prompt todavía</div>
-            <p>Rellena los campos del formulario y el prompt aparecerá aquí.</p>
-            <button type="button" class="link-btn" id="btn-example-2">Cargar ejemplo</button>
+            <p>El prompt aparece aquí a medida que escribes. <button type="button" class="link-btn" id="btn-example-2">Cargar ejemplo</button></p>
           </div>
         </div>
 
@@ -92,14 +80,7 @@
           <button type="button" class="btn" id="btn-share" hidden>Compartir</button>
         </div>
 
-        <div class="progress">
-          <div class="progress-row">
-            <span>Campos completados</span>
-            <span id="progress-text">0 de 5</span>
-          </div>
-          <div class="rail"><div class="fill" id="progress-fill"></div></div>
-          <div class="stats" id="stats"></div>
-        </div>
+        <p class="stats" id="stats"></p>
       </div>
     </section>
   </main>
@@ -113,8 +94,8 @@
 
   <footer>
     <div class="wrap footer-inner">
-      <span>PromptForge, creado por <a href="https://sidios.cl">Pablo Peña</a>. Tus prompts se guardan solo en este navegador.</span>
-      <span><a href="https://sidios.cl">sidios.cl</a> · © <span id="year"></span> Pablo Peña</span>
+      <span>Tus prompts se guardan solo en este navegador.</span>
+      <span>© <span id="year"></span> <a href="https://sidios.cl">Pablo Peña</a></span>
     </div>
   </footer>
 
@@ -127,7 +108,6 @@
         <span>Formato predeterminado</span>
         <span class="select-wrap small"><select id="set-format"></select></span>
       </label>
-      <p class="field-help">Se aplica a cada prompt nuevo.</p>
 
       <label class="row">
         <span>Tratamiento del rol</span>
@@ -138,13 +118,11 @@
           </select>
         </span>
       </label>
-      <p class="field-help">Se usa al insertar un rol desde «Sugerencias».</p>
 
       <label class="row check">
         <span>Revisar ortografía al escribir</span>
         <input type="checkbox" id="set-spell">
       </label>
-      <p class="field-help">Usa el corrector del navegador en español.</p>
 
       <div class="shortcuts hide-touch">
         <div class="stack-label">Atajos</div>
@@ -166,43 +144,5 @@
   <script src="assets/data.js"></script>
   <script src="assets/engine.js"></script>
   <script src="assets/app.js"></script>
-  <script>
-    // Aparición al entrar en pantalla, igual que en sidios.cl
-    (function () {
-      var root = document.documentElement;
-      if (!root.classList.contains('motion')) return;
-
-      var sel = '.form, .preview-inner';
-      // En pantallas angostas el historial es un panel lateral con su propio transform
-      if (window.matchMedia('(min-width: 1181px)').matches) sel = '.history, ' + sel;
-      var targets = document.querySelectorAll(sel);
-
-      function done(e) {
-        if (e.target !== this || e.propertyName !== 'transform' || !this.classList.contains('in')) return;
-        this.classList.remove('reveal', 'in');
-        this.style.removeProperty('--delay');
-        this.removeEventListener('transitionend', done);
-      }
-
-      var io = new IntersectionObserver(function (entries) {
-        var shown = entries.filter(function (e) { return e.isIntersecting; });
-        shown.forEach(function (entry, i) {
-          entry.target.style.setProperty('--delay', Math.min(i, 4) * 80 + 'ms');
-          entry.target.classList.add('in');
-          io.unobserve(entry.target);
-        });
-      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
-
-      Array.prototype.forEach.call(targets, function (el) {
-        // Ocultar sin transición, para que no se vea desaparecer antes de aparecer
-        el.style.transition = 'none';
-        el.classList.add('reveal');
-        void el.offsetWidth;
-        el.style.removeProperty('transition');
-        el.addEventListener('transitionend', done);
-        io.observe(el);
-      });
-    })();
-  </script>
 </body>
 </html>

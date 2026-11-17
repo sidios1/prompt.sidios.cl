@@ -48,10 +48,10 @@
     bar.setAttribute("role", "dialog");
     bar.setAttribute("aria-label", "Uso de cookies");
     bar.innerHTML =
-      '<p>Este sitio usa cookies analíticas para mejorar tu experiencia.</p>' +
+      '<p>¿Aceptas cookies analíticas? Solo miden visitas y acciones, nunca el texto de tus prompts.</p>' +
       '<div class="consent-actions">' +
       '<button type="button" class="btn" data-v="denied">Rechazar</button>' +
-      '<button type="button" class="btn primary" data-v="granted">Aceptar</button>' +
+      '<button type="button" class="btn" data-v="granted">Aceptar</button>' +
       "</div>";
     bar.addEventListener("click", (ev) => {
       const v = ev.target.getAttribute && ev.target.getAttribute("data-v");

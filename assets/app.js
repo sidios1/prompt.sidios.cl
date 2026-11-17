@@ -85,7 +85,6 @@
     Object.assign(copy, { id: uid(), created: Date.now(), modified: Date.now() });
     entries.push(copy);
     select(copy.id);
-    toast("Prompt duplicado");
   }
 
   function remove(id) {
@@ -216,7 +215,7 @@
           ]),
           menuAnchor,
         ]),
-        el("p", { class: "field-help", id: "h-" + f.id, text: f.help }),
+        el("p", { class: "sr-only", id: "h-" + f.id, text: f.help }),
         wrap,
         rules,
       ]));
@@ -449,17 +448,14 @@
     ["btn-copy", "btn-export", "btn-share", "mbar-copy"].forEach((id) => { $(id).disabled = !prompt; });
     $("mbar-count").textContent = `${n} de ${P.FIELDS.length}`;
 
-    $("progress-text").textContent = `${n} de ${P.FIELDS.length}`;
-    $("progress-fill").style.width = (n / P.FIELDS.length) * 100 + "%";
-    const words = prompt.split(/\s+/).filter(Boolean).length;
-    $("stats").textContent = prompt ? `${prompt.length} caracteres · ${words} palabras · ~${Math.ceil(prompt.length / 4)} tokens` : "";
+    $("stats").textContent = prompt
+      ? `${n} de ${P.FIELDS.length} campos, ${prompt.length.toLocaleString("es-CL")} caracteres, ~${Math.ceil(prompt.length / 4).toLocaleString("es-CL")} tokens`
+      : "";
 
     document.querySelectorAll("#formats button").forEach((b) => b.setAttribute("aria-checked", b.dataset.format === e.format ? "true" : "false"));
 
     $("domain").value = e.domainOverride || "";
-    $("domain-help").textContent = e.domainOverride
-      ? "Las sugerencias usan el ámbito elegido."
-      : `Sugerencias de «${P.detectDomain(e.values).name}», detectado a partir del contexto y el objetivo.`;
+    $("domain").options[0].textContent = `Automático (${P.detectDomain(e.values).name})`;
 
     renderRules();
     renderHistory();
@@ -480,7 +476,7 @@
       try { document.execCommand("copy"); } catch (__) {}
       t.remove();
     }
-    toast("Prompt copiado");
+    flashCopied();
     track("copiar_prompt", { formato: current().format });
   }
 
@@ -494,7 +490,6 @@
     const a = el("a", { href: url, download: name });
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast("Exportado como " + name);
     track("exportar_prompt", { formato: fmt.ext });
   }
 
@@ -535,6 +530,14 @@
       Object.assign(e, backup);
       renderFields(); refresh(); scheduleSave();
     });
+  }
+
+  // La confirmación de copiado se muestra en el propio botón, sin aviso flotante.
+  let copiedTimer = null;
+  function flashCopied() {
+    ["btn-copy", "mbar-copy"].forEach((id) => { $(id).textContent = "Copiado"; });
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => ["btn-copy", "mbar-copy"].forEach((id) => { $(id).textContent = "Copiar"; }), 1600);
   }
 
   // ---------- Toast ----------

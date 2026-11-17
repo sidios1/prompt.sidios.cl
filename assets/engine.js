@@ -20,11 +20,20 @@
       help: "Límites y reglas que el modelo no debe romper." },
   ];
 
+  // Cada plataforma recibe la estructura que su guía oficial recomienda:
+  // - Claude: etiquetas XML por tipo de contenido (docs de Anthropic, «Use XML tags»).
+  // - ChatGPT: encabezados Markdown en el orden de la guía de OpenAI
+  //   (rol y objetivo, instrucciones, formato de salida, contexto).
+  // - Gemini: un solo tipo de delimitador; persona, restricciones y formato al inicio,
+  //   el contexto después y la tarea al final (guía de prompting de Gemini).
   const FORMATS = [
-    { id: "plain", name: "Texto", ext: "txt", mime: "text/plain" },
-    { id: "markdown", name: "Markdown", ext: "md", mime: "text/markdown" },
-    { id: "xml", name: "XML", ext: "xml", mime: "application/xml" },
+    { id: "claude", name: "Claude", ext: "txt", mime: "text/plain" },
+    { id: "gemini", name: "Gemini", ext: "md", mime: "text/markdown" },
+    { id: "chatgpt", name: "ChatGPT", ext: "md", mime: "text/markdown" },
   ];
+  // Formatos de versiones anteriores, guardados en el historial y en los ajustes.
+  const LEGACY_FORMATS = { xml: "claude", markdown: "chatgpt", plain: "chatgpt" };
+  const normalizeFormat = (f) => (FORMATS.some((x) => x.id === f) ? f : LEGACY_FORMATS[f] || "claude");
 
   const trimmed = (s) => (s || "").trim();
   /** Minúsculas y sin tildes, para comparar. */
@@ -182,18 +191,41 @@
       .join("\n");
   }
 
+  /** Une secciones [título, texto] omitiendo las vacías. */
+  const sections = (list, render) => list.filter(([, v]) => v).map(([t, v]) => render(t, v)).join("\n\n");
+
   function assemble(values, format) {
-    const filled = FIELDS.map((f) => {
-      const v = trimmed(values[f.id]);
-      return v ? [f, f.id === "restricciones" ? bulleted(v) : v] : null;
-    }).filter(Boolean);
-    switch (format) {
-      case "plain":
-        return filled.map(([f, v]) => (v.includes("\n") ? `${f.title}:\n${v}` : `${f.title}: ${v}`)).join("\n\n");
-      case "markdown":
-        return filled.map(([f, v]) => `## ${f.title}\n${v}`).join("\n\n");
+    const v = {};
+    FIELDS.forEach((f) => {
+      const t = trimmed(values[f.id]);
+      v[f.id] = t && f.id === "restricciones" ? bulleted(t) : t;
+    });
+    switch (normalizeFormat(format)) {
+      case "chatgpt": {
+        const rolObjetivo = [v.rol, v.objetivo].filter(Boolean).join("\n\n");
+        return sections([
+          ["Rol y objetivo", rolObjetivo],
+          ["Instrucciones", v.restricciones],
+          ["Formato de salida", v.salida],
+          ["Contexto", v.contexto],
+        ], (t, x) => `# ${t}\n${x}`);
+      }
+      case "gemini":
+        return sections([
+          ["Persona", v.rol],
+          ["Restricciones", v.restricciones],
+          ["Formato de respuesta", v.salida],
+          ["Contexto", v.contexto],
+          ["Tarea", v.objetivo],
+        ], (t, x) => `## ${t}\n${x}`);
       default:
-        return filled.map(([f, v]) => `<${f.id}>\n${v}\n</${f.id}>`).join("\n\n");
+        return sections([
+          ["rol", v.rol],
+          ["contexto", v.contexto],
+          ["objetivo", v.objetivo],
+          ["formato_de_salida", v.salida],
+          ["restricciones", v.restricciones],
+        ], (t, x) => `<${t}>\n${x}\n</${t}>`);
     }
   }
 
@@ -224,7 +256,7 @@
   }
 
   window.PF = {
-    FIELDS, FORMATS, trimmed, folded,
+    FIELDS, FORMATS, normalizeFormat, trimmed, folded,
     detectDomain, roles, items, roleTrigger, completion,
     applyChip, isChipActive, roleForm, stripBullet,
     bulleted, assemble,

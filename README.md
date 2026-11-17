@@ -1,6 +1,6 @@
 # PromptForge web — prompt.sidios.cl
 
-Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto · Objetivo · Salida · Restricciones**, con sugerencias según el ámbito detectado, historial local y exportación en Texto, Markdown o XML.
+Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto · Objetivo · Salida · Restricciones**, con sugerencias según el ámbito detectado, historial local y salida adaptada a cada plataforma: Claude (XML), Gemini y ChatGPT (Markdown, cada uno con el orden que recomienda su guía).
 
 - Sitio estático (HTML/CSS/JS sin build) publicado con GitHub Pages en `https://prompt.sidios.cl`.
 - Estética de [sidios.cl](https://sidios.cl): estilo Apple, tipografía del sistema (SF Pro), azul `#0071e3` y modo oscuro automático.

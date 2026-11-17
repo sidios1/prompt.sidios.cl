@@ -28,7 +28,7 @@
   const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 
   // ---------- Estado ----------
-  const settings = Object.assign({ format: "xml", feminine: false, spell: true, theme: "system" }, readJSON(KEY_SETTINGS, {}));
+  const settings = Object.assign({ format: "claude", feminine: false, spell: true, theme: "system" }, readJSON(KEY_SETTINGS, {}));
 
   // ---------- Tema ----------
   // "system" sigue al sistema operativo hasta que se pulsa el botón; desde ahí queda fijo en
@@ -61,6 +61,9 @@
   darkMQ.addEventListener("change", () => { if (settings.theme === "system") applyTheme(); });
   applyTheme();
   let entries = (readJSON(KEY_HISTORY, []) || []).filter((e) => e && e.id && e.values);
+  // Los formatos antiguos (Texto, Markdown, XML) pasan a la plataforma equivalente.
+  settings.format = P.normalizeFormat(settings.format);
+  entries.forEach((e) => { e.format = P.normalizeFormat(e.format); });
   let selectedId = null;
   let search = "";
   let saveTimer = null;

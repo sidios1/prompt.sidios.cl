@@ -2,7 +2,7 @@
 // - Hasta que la persona acepte, GA no guarda cookies (solo pings anónimos sin identificador).
 // - Se registran visitas y acciones (copiar, exportar, nuevo…). Nunca el texto de los prompts.
 (function () {
-  const GA_ID = ""; // ID de medición de GA4, p. ej. "G-ABC123XYZ"
+  const GA_ID = "G-VY00DK2LLN"; // ID de medición de GA4 (propiedad PromptForge)
   const KEY_CONSENT = "promptforge.consent.v1";
 
   const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);

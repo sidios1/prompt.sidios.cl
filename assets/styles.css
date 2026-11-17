@@ -99,9 +99,8 @@ button { font: inherit; color: inherit; letter-spacing: inherit; }
 .nav-btn:hover { opacity: 1; }
 
 /* ===================== HERO ===================== */
-.hero { padding-top: calc(var(--nav-h) + 48px); padding-bottom: 24px; }
-.hero-name { font-size: 48px; line-height: 1.08; font-weight: 600; letter-spacing: -0.003em; }
-.hero-sub { font-size: 19px; line-height: 1.42; letter-spacing: 0.012em; color: var(--text-2); margin-top: 8px; max-width: 64ch; text-wrap: balance; }
+/* La página empieza directamente con la herramienta, bajo la barra fija */
+main.app { margin-top: var(--nav-h); }
 
 /* ===================== LAYOUT ===================== */
 .app {
@@ -275,8 +274,12 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
 
 /* ===================== FOOTER ===================== */
 footer { background: var(--bg-alt); color: var(--text-2); font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; }
-.footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-top: 16px; padding-bottom: 24px; }
+.footer-inner { padding-top: 20px; padding-bottom: 24px; }
 .footer-inner a { color: var(--text-2); }
+.footer-about { padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+.footer-name { font-size: 14px; font-weight: 600; letter-spacing: -0.016em; color: var(--text); }
+.footer-about p + p { margin-top: 2px; }
+.footer-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-top: 14px; }
 
 /* ===================== DIALOG / TOAST ===================== */
 .dialog {
@@ -330,9 +333,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 @media (max-width: 734px) {
   .nav-inner { gap: 14px; }
   .nav-links { gap: 18px; }
-  .hero { padding-top: calc(var(--nav-h) + 32px); padding-bottom: 8px; }
-  .hero-name { font-size: 40px; }
-  .hero-sub { font-size: 17px; line-height: 1.47; }
   .field { padding: 24px 0; }
   .field-title { font-size: 21px; line-height: 1.19; }
 }
@@ -394,17 +394,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 .consent-actions { display: flex; gap: 8px; margin-left: auto; }
 @media (max-width: 834px) {
   .consent { bottom: calc(76px + env(safe-area-inset-bottom)); }
-}
-
-/* ===================== MOVIMIENTO ===================== */
-/* Solo una entrada breve del encabezado; los paneles de trabajo no se animan. */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .hero-name, .hero-sub { animation: rise .5s cubic-bezier(0.28, 0.11, 0.32, 1) both; }
-  .hero-sub { animation-delay: .08s; }
 }
 
 /* ===================== ESCRITORIO: TODO EN UNA PANTALLA ===================== */

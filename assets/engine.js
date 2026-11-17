@@ -45,8 +45,9 @@
   }
 
   // ---------- Detección de dominio ----------
+  // El rol pesa más: el ámbito (y con él las predicciones de todos los campos) se ajusta según el rol.
   function detectDomain(values) {
-    const weighted = [[values.contexto, 2], [values.objetivo, 2], [values.rol, 1], [values.salida, 1]];
+    const weighted = [[values.rol, 3], [values.contexto, 2], [values.objetivo, 2], [values.salida, 1]];
     const scores = {};
     for (const [raw, weight] of weighted) {
       if (!raw) continue;
@@ -102,7 +103,7 @@
   // ---------- Predicción en línea ----------
   // El campo muestra en gris, tras el cursor, el resto más probable de la palabra y de la frase.
   // Fuentes, de más a menos peso: el prompt actual, el catálogo del ámbito, el historial del
-  // usuario, el resto del catálogo y el diccionario base (PF_LEXICON).
+  // usuario, el resto del catálogo y el diccionario (PF_LEXICON_EXTRA y PF_LEXICON_FREQ).
 
   const WORD_RE = /[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu;
   const SENTENCE_SPLIT = /[\n.;:!?¿¡()«»"]+/;
@@ -143,17 +144,51 @@
     }
   }
 
+  function rowTotal(row) {
+    let t = 0;
+    row.forEach((c) => { t += c; });
+    return t;
+  }
+
   function bump(map, key, next, weight) {
     let m = map.get(key);
     if (!m) map.set(key, (m = new Map()));
     m.set(next, (m.get(next) || 0) + weight);
   }
 
+  // Diccionario: índice ordenado por forma plegada, para buscar por prefijo con búsqueda binaria.
+  // Se construye una sola vez. El peso baja con el logaritmo del rango de frecuencia.
+  let lexIndex = null;
+  function lexicon() {
+    if (lexIndex) return lexIndex;
+    const byKey = new Map();
+    const put = (w, s) => {
+      const k = folded(w);
+      const cur = byKey.get(k);
+      if (!cur) byKey.set(k, { k, w, s });
+      else if (s > cur.s) cur.s = s;
+    };
+    const freq = window.PF_LEXICON_FREQ || [];
+    const logN = Math.log(freq.length + 1);
+    freq.forEach((w, i) => put(w, 2.5 * (1 - Math.log(i + 1) / logN)));
+    (window.PF_LEXICON_EXTRA || []).forEach((w) => put(w, 1.5));
+    lexIndex = [...byKey.values()].sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));
+    return lexIndex;
+  }
+
+  /** Entradas del diccionario cuya forma plegada empieza por `q`. */
+  function lexPrefix(q) {
+    const idx = lexicon();
+    let lo = 0, hi = idx.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (idx[mid].k < q) lo = mid + 1; else hi = mid; }
+    const out = [];
+    for (let i = lo; i < idx.length && idx[i].k.startsWith(q); i++) out.push(idx[i]);
+    return out;
+  }
+
   /** Modelo de predicción para un ámbito y un historial. Se cachea desde la app. */
   function buildModel(domain, entries) {
     const model = { vocab: new Map(), bi: new Map(), tri: new Map() };
-    const lex = window.PF_LEXICON || [];
-    lex.forEach((w, i) => addWord(model.vocab, w, 1 + 2 * (1 - i / lex.length)));
     for (const d of C.all) {
       const w = d.id === domain.id ? 6 : d.id === C.general.id ? 3 : 1;
       catalogTexts(d).forEach((t) => addNgrams(model, t, w));
@@ -163,11 +198,11 @@
   }
 
   /** Palabras siguientes más probables a partir de las dos últimas, con umbral de confianza. */
-  function nextWords(model, extra, prev2, prev1, limit) {
+  function nextWords(model, extra, prev2, prev1, limit, strict) {
     const out = [];
     let a = prev2, b = prev1;
     for (let n = 0; n < limit && b; n++) {
-      const next = bestNext(model, extra, a, b);
+      const next = bestNext(model, extra, a, b, strict || n > 0);
       if (!next) break;
       out.push(next);
       a = b; b = next;
@@ -175,7 +210,7 @@
     return out;
   }
 
-  function bestNext(model, extra, a, b) {
+  function bestNext(model, extra, a, b, triOnly) {
     const pick = (maps, key, minShare) => {
       const counts = new Map();
       for (const m of maps) {
@@ -186,7 +221,8 @@
       counts.forEach((c, k) => { total += c; if (c > bestC) { best = k; bestC = c; } });
       return best && bestC / total >= minShare ? best : null;
     };
-    return (a && pick([model.tri, extra.tri], a + " " + b, 0.34)) || pick([model.bi, extra.bi], b, 0.4);
+    const tri = a && pick([model.tri, extra.tri], a + " " + b, 0.34);
+    return tri || (triOnly ? null : pick([model.bi, extra.bi], b, 0.4));
   }
 
   /** Copia el uso de mayúsculas de lo escrito por el usuario a la forma canónica. */
@@ -196,7 +232,12 @@
     return word;
   }
 
-  const canonical = (model, k) => (model.vocab.get(k) || { w: k }).w;
+  function canonical(model, k) {
+    const v = model.vocab.get(k);
+    if (v) return v.w;
+    const hit = lexPrefix(k)[0];
+    return hit && hit.k === k ? hit.w : k;
+  }
   const joinWords = (model, ks) => ks.map((k) => canonical(model, k)).join(" ");
 
   /** Inicio del fragmento actual: tras el último salto de línea o fin de oración. */
@@ -263,7 +304,10 @@
 
     // 3) Palabra en curso (≥ 2 letras) o palabra siguiente, con el contexto del prompt actual.
     const extra = { vocab: new Map(), bi: new Map(), tri: new Map() };
-    for (const k in values || {}) addNgrams(extra, values[k], 4);
+    for (const k in values || {}) {
+      const v = k === field ? text.replace(/[\p{L}\p{N}]+$/u, "") : values[k];
+      addNgrams(extra, v, 4);
+    }
     const segWords = (text.slice(segmentStart(text)).match(WORD_RE) || []).map(folded);
     const endsInWord = /[\p{L}\p{N}]$/u.test(text);
 
@@ -275,21 +319,37 @@
       const prev2 = segWords[segWords.length - 3] || null;
       let best = null, bestS = 0;
       const consider = (k, s) => {
-        if (k.length <= q.length || !k.startsWith(q)) return;
+        if (k.length < q.length || !k.startsWith(q)) return;
         let score = s;
         if (prev1) {
-          const bi = (model.bi.get(prev1) || new Map()).get(k) || 0;
+          const row = model.bi.get(prev1);
+          const bi = (row && row.get(k)) || 0;
           const tri = prev2 ? (model.tri.get(prev2 + " " + prev1) || new Map()).get(k) || 0 : 0;
           score += bi * 3 + tri * 5;
-        }
+          // Palabra ya completa: solo compite si una frase conocida la predice (para seguir con la siguiente).
+          if (k === q && !tri && !(bi && bi / rowTotal(row) >= 0.5)) return;
+        } else if (k === q) return;
         if (score > bestS) { best = k; bestS = score; }
       };
-      model.vocab.forEach((v, k) => consider(k, v.s + ((extra.vocab.get(k) || { s: 0 }).s)));
-      extra.vocab.forEach((v, k) => { if (!model.vocab.has(k)) consider(k, v.s); });
+      // Puntaje = diccionario + catálogo/historial + prompt actual (+ n-gramas en consider()).
+      const total = new Map();
+      const forms = new Map();
+      const add = (k, w, sc) => {
+        if (!k.startsWith(q)) return;
+        total.set(k, (total.get(k) || 0) + sc);
+        if (!forms.has(k) || w[0] === w[0].toLowerCase()) forms.set(k, w);
+      };
+      lexPrefix(q).forEach((e) => add(e.k, e.w, e.s));
+      model.vocab.forEach((v, k) => add(k, v.w, v.s));
+      extra.vocab.forEach((v, k) => add(k, v.w, v.s));
+      total.forEach((sc, k) => consider(k, sc));
       if (!best) return null;
-      const word = (model.vocab.get(best) || extra.vocab.get(best)).w;
-      const chain = nextWords(model, extra, prev1, best, MAX_CHAIN);
+      // Si lo escrito ya es una palabra, no vale la pena proponer solo su plural.
+      if (total.has(q) && (best === q + "s" || best === q + "es")) return null;
+      const word = forms.get(best);
+      const chain = nextWords(model, extra, prev1, best, MAX_CHAIN, !!prev1);
       const tail = chain.length ? " " + joinWords(model, chain) : "";
+      if (best === q && !tail) return null;
       return ok(text.slice(0, text.length - partial.length) + matchCase(partial, word) + tail);
     }
 

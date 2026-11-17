@@ -1,6 +1,5 @@
-// Diccionario base para la predicción en línea: palabras frecuentes del español,
-// ordenadas aproximadamente por frecuencia, seguidas de vocabulario propio de prompts.
-// El motor usa la posición como peso: las primeras pesan más.
+// Vocabulario propio para la predicción en línea: palabras de uso común en prompts, profesiones y
+// términos técnicos que la lista de frecuencias general (lexicon-freq.js) no trae o trae con poco peso.
 (function () {
   const comunes = `
 de la que el en y a los se del las un por con no una su para es al lo como más o pero sus le ha me si sin sobre este ya entre
@@ -77,7 +76,35 @@ prompt prompts inteligencia artificial ia modelo lenguaje chatgpt claude gemini 
 paso pasos etapa etapas fase fases semana semanas mes meses plazo plazos cronograma calendario hito hitos
 español inglés idioma traducción tono profesional cercano formal amigable persuasivo neutral
 `;
-  const words = (comunes + verbos + adjetivos + dominio).split(/\s+/).filter(Boolean);
+  const profesiones = `
+contador contadora auditor auditora abogado abogada ingeniero ingeniera arquitecto arquitecta médico médica enfermero
+enfermera profesor profesora docente psicólogo psicóloga nutricionista kinesiólogo kinesióloga dentista veterinario
+veterinaria periodista diseñador diseñadora desarrollador desarrolladora programador programadora analista consultor
+consultora asesor asesora gerente gerenta director directora jefe jefa supervisor supervisora coordinador coordinadora
+administrador administradora ejecutivo ejecutiva vendedor vendedora corredor corredora tasador tasadora economista
+estadístico estadística investigador investigadora científico científica traductor traductora redactor redactora editor
+editora escritor escritora guionista fotógrafo fotógrafa publicista emprendedor emprendedora empresario empresaria
+especialista técnico técnica tecnólogo operario operaria inspector inspectora mentor mentora coach entrenador entrenadora
+reclutador reclutadora planificador planificadora estratega comunicador comunicadora relacionador
+`;
+  const tecnicos = `
+tributación tributario tributaria tributarios tributarias tributo tributos impuesto impuestos iva renta global complementario
+declaración declaraciones formulario boleta boletas honorarios factura facturas facturación electrónica crédito débito
+fiscal fiscales contable contables contabilidad balance balances auditoría auditorías conciliación bancaria activo activos
+pasivo pasivos patrimonio depreciación amortización provisión provisiones remuneración remuneraciones liquidación
+liquidaciones cotización cotizaciones previsional previsionales finiquito indemnización retención retenciones
+devolución régimen regímenes pyme pymes propyme emprendedores sociedad sociedades limitada anónima giro ejercicio
+período mensual anual trimestral semestral estados financieros flujo inventario inventarios costeo margen utilidad
+utilidades pérdida pérdidas ingreso egreso egresos presupuesto presupuestos proyección proyecciones
+normativa normativas circular circulares reglamento jurisprudencia cumplimiento fiscalización sanción multa multas
+jurisdicción tribunal tribunales demanda demandas sentencia arrendamiento arriendo arrendatario arrendador
+reclutamiento selección candidato candidatos onboarding desempeño capacitación clima organizacional colaboradores
+construcción edificación estructural hormigón especificaciones licitación itemizado cubicación partidas
+logística bodega despacho despachos proveedores abastecimiento suministro distribución almacenamiento
+hipotecario tasación plusvalía rentabilidad propiedad propiedades departamento inmobiliaria inmobiliario
+diagnóstico tratamiento síntomas paciente pacientes clínico clínica terapia terapéutico
+`;
+  const words = (profesiones + tecnicos + comunes + verbos + adjetivos + dominio).split(/\s+/).filter(Boolean);
   const seen = new Set();
-  window.PF_LEXICON = words.filter((w) => !seen.has(w) && seen.add(w));
+  window.PF_LEXICON_EXTRA = words.filter((w) => !seen.has(w) && seen.add(w));
 })();

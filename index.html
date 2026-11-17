@@ -11,6 +11,12 @@
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
+  <script>
+    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('motion');
+    }
+  </script>
+
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
@@ -161,5 +167,43 @@
   <script src="assets/data.js"></script>
   <script src="assets/engine.js"></script>
   <script src="assets/app.js"></script>
+  <script>
+    // Aparición al entrar en pantalla, igual que en sidios.cl
+    (function () {
+      var root = document.documentElement;
+      if (!root.classList.contains('motion')) return;
+
+      var sel = '.form, .preview-inner';
+      // En pantallas angostas el historial es un panel lateral con su propio transform
+      if (window.matchMedia('(min-width: 1181px)').matches) sel = '.history, ' + sel;
+      var targets = document.querySelectorAll(sel);
+
+      function done(e) {
+        if (e.target !== this || e.propertyName !== 'transform' || !this.classList.contains('in')) return;
+        this.classList.remove('reveal', 'in');
+        this.style.removeProperty('--delay');
+        this.removeEventListener('transitionend', done);
+      }
+
+      var io = new IntersectionObserver(function (entries) {
+        var shown = entries.filter(function (e) { return e.isIntersecting; });
+        shown.forEach(function (entry, i) {
+          entry.target.style.setProperty('--delay', Math.min(i, 4) * 80 + 'ms');
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+
+      Array.prototype.forEach.call(targets, function (el) {
+        // Ocultar sin transición, para que no se vea desaparecer antes de aparecer
+        el.style.transition = 'none';
+        el.classList.add('reveal');
+        void el.offsetWidth;
+        el.style.removeProperty('transition');
+        el.addEventListener('transitionend', done);
+        io.observe(el);
+      });
+    })();
+  </script>
 </body>
 </html>

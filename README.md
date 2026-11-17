@@ -1,6 +1,6 @@
 # PromptForge web — prompt.sidios.cl
 
-Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto · Objetivo · Salida · Restricciones**, con sugerencias según el ámbito detectado, historial local y salida adaptada a cada plataforma: Claude (XML), Gemini y ChatGPT (Markdown, cada uno con el orden que recomienda su guía).
+Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto · Objetivo · Salida · Restricciones**, con predicción en línea (texto fantasma que se acepta con Tab o →) según el ámbito, el contexto y un diccionario, historial local y salida adaptada a cada plataforma: Claude (XML), Gemini y ChatGPT (Markdown, cada uno con el orden que recomienda su guía).
 
 - Sitio estático (HTML/CSS/JS sin build) publicado con GitHub Pages en `https://prompt.sidios.cl`.
 - Estética de [sidios.cl](https://sidios.cl): estilo Apple, tipografía del sistema (SF Pro), azul `#0071e3` y modo oscuro automático.
@@ -12,8 +12,9 @@ Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto ·
 | --- | --- |
 | `index.html` | Página y diálogo de ajustes |
 | `assets/styles.css` | Estilos (tokens de sidios.cl) |
-| `assets/data.js` | Catálogo de sugerencias por ámbito |
-| `assets/engine.js` | Detección de ámbito, autocompletado y armado del prompt |
+| `assets/data.js` | Catálogo de frases por ámbito |
+| `assets/lexicon.js` | Diccionario base de palabras frecuentes |
+| `assets/engine.js` | Detección de ámbito, modelo predictivo (vocabulario y n-gramas) y armado del prompt |
 | `assets/app.js` | Estado, historial e interfaz |
 
 ## Desarrollo local

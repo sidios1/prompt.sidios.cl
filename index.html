@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PromptForge · sidios</title>
-  <meta name="description" content="PromptForge — arma prompts claros con la estructura Rol, Contexto, Objetivo, Salida y Restricciones. Sugerencias por ámbito, historial y exportación.">
+  <meta name="description" content="PromptForge — arma prompts claros con la estructura Rol, Contexto, Objetivo, Salida y Restricciones. Predicción en línea según ámbito y contexto, historial y exportación.">
   <meta name="author" content="Pablo Peña">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -18,7 +18,7 @@
     } catch (e) {}
   </script>
 
-  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17c">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17d">
 </head>
 <body>
 
@@ -104,7 +104,7 @@
     <div class="wrap footer-inner">
       <div class="footer-about">
         <p class="footer-name">PromptForge</p>
-        <p>Arma prompts claros a partir de cinco campos, con sugerencias según lo que escribes.</p>
+        <p>Arma prompts claros a partir de cinco campos, con predicción en línea según lo que escribes.</p>
       </div>
       <div class="footer-meta">
         <span>Tus prompts se guardan solo en este navegador.</span>
@@ -143,7 +143,9 @@
         <div><kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> Copiar prompt</div>
         <div><kbd>Ctrl/⌘</kbd> + <kbd>S</kbd> Exportar</div>
         <div><kbd>Alt</kbd> + <kbd>N</kbd> Nuevo prompt</div>
-        <div><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd> <kbd>Esc</kbd> Autocompletado</div>
+        <div><kbd>Tab</kbd> Aceptar la predicción</div>
+        <div><kbd>→</kbd> Aceptar la palabra siguiente</div>
+        <div><kbd>Esc</kbd> Descartar la predicción</div>
       </div>
 
       <div class="dialog-actions">
@@ -154,9 +156,10 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/analytics.js?v=2026-11-17c"></script>
-  <script src="assets/data.js?v=2026-11-17c"></script>
-  <script src="assets/engine.js?v=2026-11-17c"></script>
-  <script src="assets/app.js?v=2026-11-17c"></script>
+  <script src="assets/analytics.js?v=2026-11-17d"></script>
+  <script src="assets/data.js?v=2026-11-17d"></script>
+  <script src="assets/lexicon.js?v=2026-11-17d"></script>
+  <script src="assets/engine.js?v=2026-11-17d"></script>
+  <script src="assets/app.js?v=2026-11-17d"></script>
 </body>
 </html>

@@ -81,6 +81,7 @@
   function saveNow() {
     clearTimeout(saveTimer);
     writeJSON(KEY_HISTORY, entries.filter((e) => !P.isEmptyEntry(e)));
+    model = null;
     writeJSON(KEY_SELECTED, selectedId);
   }
   window.addEventListener("pagehide", saveNow);
@@ -207,12 +208,9 @@
 
   // ---------- Campos ----------
   const fieldRefs = {};
-  let completionState = null; // { field, items, base, hl }
-  let openMenu = null;        // { field, pop, btn }
 
   function renderFields() {
-    closeMenu();
-    closeCompletion();
+    clearGhost();
     const host = $("fields");
     host.replaceChildren();
     const e = current();
@@ -220,40 +218,34 @@
       const ta = el("textarea", {
         id: "f-" + f.id, rows: f.id === "rol" ? "1" : "3",
         placeholder: f.placeholder, spellcheck: settings.spell ? "true" : "false", lang: "es",
-        "aria-describedby": "h-" + f.id, autocomplete: "off",
-        "aria-autocomplete": "list", "aria-expanded": "false",
+        "aria-describedby": "h-" + f.id, autocomplete: "off", "aria-autocomplete": "inline",
       });
       ta.value = e.values[f.id] || "";
       ta.addEventListener("input", () => onInput(f.id));
       ta.addEventListener("keydown", (ev) => onFieldKey(f.id, ev));
-      ta.addEventListener("blur", () => setTimeout(() => { if (completionState && completionState.field === f.id) closeCompletion(); }, 120));
-      ta.addEventListener("click", () => updateCompletion(f.id));
+      ta.addEventListener("blur", () => { if (ghost && ghost.field === f.id) clearGhost(); });
+      ta.addEventListener("focus", () => updateGhost(f.id));
+      ta.addEventListener("click", () => updateGhost(f.id));
+      ta.addEventListener("scroll", () => { layer.scrollTop = ta.scrollTop; });
 
-      const menuAnchor = f.id === "restricciones" ? null : el("div", { class: "menu-anchor" }, [
-        el("button", {
-          type: "button", class: "menu-btn", "aria-haspopup": "true", "aria-expanded": "false",
-          title: `Insertar una sugerencia en «${f.title}»`, text: "Sugerencias",
-          onclick: (ev) => toggleMenu(f.id, ev.currentTarget),
-        }),
-      ]);
-
-      const rules = f.id === "restricciones"
-        ? el("div", { class: "rules" }, [el("div", { class: "stack-label", text: "Reglas comunes" }), el("div", { class: "chips", id: "rules" })])
-        : null;
-
-      const wrap = el("div", { class: "input-wrap" }, [ta]);
+      // Capa con el texto fantasma: replica el texto del campo (invisible) y añade la predicción en gris.
+      const layer = el("div", { class: "ghost", "aria-hidden": "true" });
+      const accept = el("button", {
+        type: "button", class: "ghost-accept", text: "Completar", hidden: true, tabindex: "-1",
+        onmousedown: (ev) => ev.preventDefault(),
+        onclick: () => acceptGhost(f.id, false),
+      });
+      const wrap = el("div", { class: "input-wrap" }, [ta, layer, accept]);
       host.append(el("div", { class: "field", id: "field-" + f.id }, [
         el("div", { class: "field-head" }, [
           el("label", { for: "f-" + f.id }, [
             el("span", { class: "field-title", text: f.title }),
           ]),
-          menuAnchor,
         ]),
         el("p", { class: "sr-only", id: "h-" + f.id, text: f.help }),
         wrap,
-        rules,
       ]));
-      fieldRefs[f.id] = { ta, wrap, anchor: menuAnchor };
+      fieldRefs[f.id] = { ta, wrap, layer, accept };
     });
     requestAnimationFrame(() => P.FIELDS.forEach((f) => autosize(f.id)));
   }
@@ -274,7 +266,9 @@
     const lh = parseFloat(getComputedStyle(ta).lineHeight) || 26;
     const max = lh * (field === "rol" ? 3 : 10) + 26;
     ta.style.height = "auto";
-    const h = Math.min(ta.scrollHeight + 2, max);
+    const layer = fieldRefs[field].layer;
+    const content = Math.max(ta.scrollHeight, ghost && ghost.field === field ? layer.scrollHeight : 0);
+    const h = Math.min(content + 2, max);
     ta.style.height = h + "px";
     ta.style.overflowY = ta.scrollHeight + 2 > max ? "auto" : "hidden";
   }
@@ -295,154 +289,105 @@
     autosize(field);
     scheduleSave();
     refresh();
-    updateCompletion(field);
+    dismissed = null;
+    updateGhost(field);
   }
 
-  /** Cambio programático (sugerencias, chips): actualiza el campo y deja el cursor al final. */
-  function setValue(field, value, keepFocus = true) {
+  /** Cambio programático (predicción aceptada): actualiza el campo y deja el cursor al final. */
+  function setValue(field, value) {
     const ta = fieldRefs[field].ta;
     ta.value = value;
+    focusTextarea(field);
     onInput(field);
-    closeCompletion();
-    if (keepFocus) focusTextarea(field);
   }
 
-  // ---------- Autocompletado ----------
-  function updateCompletion(field) {
-    const ta = fieldRefs[field].ta;
-    if (document.activeElement !== ta || ta.selectionStart !== ta.value.length || ta.selectionEnd !== ta.value.length) {
-      closeCompletion(); return;
+  // ---------- Predicción en línea (texto fantasma) ----------
+  // Tab acepta toda la predicción, → solo la palabra siguiente y Esc la descarta hasta la próxima tecla.
+  let ghost = null;      // { field, full }
+  let dismissed = null;  // campo cuya predicción se descartó con Esc
+  let model = null;      // modelo cacheado; se invalida al guardar el historial o cambiar de ámbito
+  let modelKey = "";
+
+  function predictionModel(domain) {
+    const key = domain.id + "|" + selectedId;
+    if (!model || key !== modelKey) {
+      model = P.buildModel(domain, entries.filter((e) => e.id !== selectedId));
+      modelKey = key;
     }
-    const comp = P.completion(field, ta.value, activeDomain(current()));
-    if (!comp) { closeCompletion(); return; }
-    completionState = { field, items: comp.items, base: comp.base, hl: -1 };
-    renderCompletion();
+    return model;
   }
 
-  function renderCompletion() {
-    const prev = document.querySelector(".pop.complete");
-    if (prev) prev.remove();
-    if (!completionState) return;
-    const { field, items, hl } = completionState;
-    const { ta, wrap } = fieldRefs[field];
-    const pop = el("div", { class: "pop complete", role: "listbox", id: "complete-" + field });
-    items.forEach((item, i) => {
-      pop.append(el("button", {
-        type: "button", class: "pop-item" + (i === hl ? " hl" : ""), role: "option",
-        "aria-selected": i === hl ? "true" : "false", tabindex: "-1", id: `opt-${field}-${i}`,
-        onmousedown: (ev) => ev.preventDefault(),
-        onclick: () => acceptCompletion(i),
-      }, [item.trim()]));
-    });
-    wrap.append(pop);
-    ta.setAttribute("aria-expanded", "true");
-    ta.setAttribute("aria-controls", pop.id);
-    if (hl >= 0) {
-      ta.setAttribute("aria-activedescendant", `opt-${field}-${hl}`);
-      const opt = pop.children[hl];
-      if (opt) opt.scrollIntoView({ block: "nearest" });
-    } else ta.removeAttribute("aria-activedescendant");
+  // La capa replica la caja de texto del campo: misma tipografía, márgenes y ancho útil.
+  const MIRRORED = ["fontFamily", "fontSize", "fontWeight", "fontStyle", "letterSpacing", "lineHeight", "textTransform",
+    "wordSpacing", "textIndent", "paddingTop", "paddingLeft", "paddingBottom", "borderTopWidth", "borderLeftWidth",
+    "borderBottomWidth", "borderRightWidth", "borderRadius", "tabSize"];
+
+  function syncLayer(ta, layer) {
+    const cs = getComputedStyle(ta);
+    for (const p of MIRRORED) layer.style[p] = cs[p];
+    // Si la caja muestra barra de desplazamiento, el ancho útil es menor: se descuenta en el margen derecho.
+    const bar = ta.offsetWidth - ta.clientWidth - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    layer.style.paddingRight = parseFloat(cs.paddingRight) + Math.max(0, bar) + "px";
+    layer.style.top = ta.offsetTop + "px";
+    layer.style.left = ta.offsetLeft + "px";
+    layer.style.width = ta.offsetWidth + "px";
+    layer.style.height = ta.offsetHeight + "px";
   }
 
-  function closeCompletion() {
-    if (completionState && fieldRefs[completionState.field]) {
-      const ta = fieldRefs[completionState.field].ta;
-      ta.setAttribute("aria-expanded", "false");
-      ta.removeAttribute("aria-activedescendant");
-    }
-    completionState = null;
-    document.querySelectorAll(".pop.complete").forEach((n) => n.remove());
+  function updateGhost(field) {
+    const refs = fieldRefs[field];
+    if (!refs) return;
+    const { ta } = refs;
+    const atEnd = ta.selectionStart === ta.value.length && ta.selectionEnd === ta.value.length;
+    if (document.activeElement !== ta || !atEnd || dismissed === field) { clearGhost(); return; }
+    const e = current();
+    const domain = activeDomain(e);
+    const full = P.predict(field, ta.value, { model: predictionModel(domain), domain, feminine: settings.feminine, values: e.values });
+    if (!full) { clearGhost(); return; }
+    if (ghost && ghost.field !== field) clearGhost();
+    ghost = { field, full };
+    const { layer, wrap, accept } = refs;
+    syncLayer(ta, layer);
+    layer.replaceChildren(
+      el("span", { class: "ghost-typed", text: ta.value }),
+      el("span", { class: "ghost-hint", text: full.slice(ta.value.length) }),
+    );
+    wrap.classList.add("has-ghost");
+    accept.hidden = !isTouch();
+    autosize(field);
+    syncLayer(ta, layer);
+    layer.scrollTop = ta.scrollTop;
   }
 
-  function acceptCompletion(i) {
-    if (!completionState) return;
-    const { field, items, base } = completionState;
-    setValue(field, base + items[i]);
+  function clearGhost() {
+    if (!ghost) return;
+    const refs = fieldRefs[ghost.field];
+    const field = ghost.field;
+    ghost = null;
+    if (!refs) return;
+    refs.layer.replaceChildren();
+    refs.wrap.classList.remove("has-ghost");
+    refs.accept.hidden = true;
+    autosize(field);
+  }
+
+  function acceptGhost(field, wordOnly) {
+    if (!ghost || ghost.field !== field) return false;
+    const text = fieldRefs[field].ta.value;
+    setValue(field, wordOnly ? P.acceptWord(text, ghost.full) : ghost.full);
+    track("aceptar_prediccion", { campo: field, modo: wordOnly ? "palabra" : "completa" });
+    return true;
   }
 
   function onFieldKey(field, ev) {
-    const cs = completionState && completionState.field === field ? completionState : null;
-    if (!cs) return;
-    if (ev.key === "ArrowDown") { ev.preventDefault(); cs.hl = (cs.hl + 1) % cs.items.length; renderCompletion(); }
-    else if (ev.key === "ArrowUp") { ev.preventDefault(); cs.hl = cs.hl <= 0 ? cs.items.length - 1 : cs.hl - 1; renderCompletion(); }
-    else if (ev.key === "Tab" && !ev.shiftKey) { ev.preventDefault(); acceptCompletion(Math.max(cs.hl, 0)); }
-    else if (ev.key === "Enter" && cs.hl >= 0 && !ev.metaKey && !ev.ctrlKey) { ev.preventDefault(); acceptCompletion(cs.hl); }
-    else if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); closeCompletion(); }
+    if (!ghost || ghost.field !== field || ev.isComposing) return;
+    const mods = ev.metaKey || ev.ctrlKey || ev.altKey;
+    if (ev.key === "Tab" && !ev.shiftKey && !mods) { ev.preventDefault(); acceptGhost(field, false); }
+    else if (ev.key === "ArrowRight" && !ev.shiftKey && !mods) { ev.preventDefault(); acceptGhost(field, true); }
+    else if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); dismissed = field; clearGhost(); }
   }
 
-  // ---------- Menú de sugerencias ----------
-  function toggleMenu(field, btn) {
-    if (openMenu && openMenu.field === field) { closeMenu(); return; }
-    closeMenu();
-    closeCompletion();
-    const domain = activeDomain(current());
-    const fem = settings.feminine;
-    const insert = (item) => { closeMenu(); setValue(field, P.applyChip(item, field, fieldRefs[field].ta.value, fem)); };
-    const itemBtn = (label, value) => el("button", { type: "button", class: "pop-item", role: "menuitem", onclick: () => insert(value) }, [label.trim()]);
-    const roleBtn = (r) => itemBtn(fem ? r.f : r.m, r.m);
-
-    const pop = el("div", { class: "pop menu", role: "menu" });
-    if (field === "rol") {
-      pop.append(el("div", { class: "pop-group", text: domain.name }));
-      domain.roles.forEach((r) => pop.append(roleBtn(r)));
-      if (domain.id !== C.general.id) {
-        pop.append(el("div", { class: "pop-group", text: C.general.name }));
-        C.general.roles.forEach((r) => pop.append(roleBtn(r)));
-      }
-      const others = el("details", null, [el("summary", { text: "Otros ámbitos" })]);
-      C.all.filter((d) => d.id !== domain.id && d.id !== C.general.id).forEach((d) => {
-        others.append(el("details", null, [el("summary", { text: d.name }), ...d.roles.map(roleBtn)]));
-      });
-      pop.append(others);
-    } else {
-      pop.append(el("div", { class: "pop-group", text: domain.name }));
-      P.items(field, domain).forEach((it) => pop.append(itemBtn(it, it)));
-    }
-    fieldRefs[field].anchor.append(pop);
-    btn.setAttribute("aria-expanded", "true");
-    openMenu = { field, pop, btn };
-    const first = pop.querySelector(".pop-item");
-    if (first) first.focus({ preventScroll: true });
-  }
-
-  function closeMenu(returnFocus) {
-    if (!openMenu) return;
-    openMenu.pop.remove();
-    openMenu.btn.setAttribute("aria-expanded", "false");
-    if (returnFocus) openMenu.btn.focus();
-    openMenu = null;
-  }
-
-  document.addEventListener("mousedown", (ev) => {
-    if (openMenu && !openMenu.pop.contains(ev.target) && !openMenu.btn.contains(ev.target)) closeMenu();
-  });
-
-  // Navegación con flechas dentro del menú abierto.
-  document.addEventListener("keydown", (ev) => {
-    if (!openMenu) return;
-    if (ev.key === "Escape") { ev.preventDefault(); closeMenu(true); return; }
-    if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
-    const items = [...openMenu.pop.querySelectorAll(".pop-item, summary")].filter((n) => n.offsetParent !== null);
-    if (!items.length) return;
-    ev.preventDefault();
-    const i = items.indexOf(document.activeElement);
-    const next = ev.key === "ArrowDown" ? (i + 1) % items.length : (i <= 0 ? items.length - 1 : i - 1);
-    items[next].focus();
-  });
-
-  // ---------- Reglas comunes ----------
-  function renderRules() {
-    const host = $("rules");
-    if (!host) return;
-    const e = current();
-    const text = e.values.restricciones || "";
-    host.replaceChildren(...P.items("restricciones", activeDomain(e)).map((rule) =>
-      el("button", {
-        type: "button", class: "chip",
-        "aria-pressed": P.isChipActive(rule, "restricciones", text) ? "true" : "false",
-        onclick: () => setValue("restricciones", P.applyChip(rule, "restricciones", fieldRefs.restricciones.ta.value), false),
-      }, [rule])));
-  }
+  window.addEventListener("resize", () => { if (ghost) updateGhost(ghost.field); });
 
   // ---------- Ámbito ----------
   function initDomainSelect() {
@@ -454,6 +399,7 @@
     sel.addEventListener("change", () => {
       const e = current();
       e.domainOverride = sel.value || null;
+      model = null;
       scheduleSave();
       refresh();
     });
@@ -491,7 +437,6 @@
     $("domain").value = e.domainOverride || "";
     $("domain").options[0].textContent = `Automático (${P.detectDomain(e.values).name})`;
 
-    renderRules();
     renderHistory();
     document.title = (P.isEmptyEntry(e) ? "PromptForge" : P.entryTitle(e).slice(0, 48) + " · PromptForge") + " · sidios";
   }

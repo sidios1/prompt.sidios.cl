@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PromptForge · sidios</title>
+  <meta name="description" content="PromptForge — arma prompts claros con la estructura Rol, Contexto, Objetivo, Salida y Restricciones. Sugerencias por ámbito, historial y exportación.">
+  <meta name="theme-color" content="#f7f7f9">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+  <nav>
+    <div class="nav-left">
+      <a href="https://sidios.cl" class="nav-brand">sidios</a>
+      <span class="nav-sep">/</span>
+      <a href="./" class="nav-app">prompt</a>
+    </div>
+    <div class="nav-links">
+      <button type="button" class="nav-btn only-narrow" id="btn-history">Historial</button>
+      <button type="button" class="nav-btn" id="btn-new" title="Nuevo prompt (Alt+N)">Nuevo</button>
+      <button type="button" class="nav-btn" id="btn-example">Ejemplo</button>
+      <button type="button" class="nav-btn" id="btn-settings">Ajustes</button>
+    </div>
+  </nav>
+
+  <header class="hero wrap">
+    <div class="eyebrow">Herramienta · Prompt engineering</div>
+    <h1 class="hero-name">PromptForge<span class="dot">.</span></h1>
+    <p class="hero-tagline">Cinco campos, <span class="pole">un prompt claro</span>. Rol, contexto, objetivo, salida y restricciones — con sugerencias según lo que escribes.</p>
+  </header>
+
+  <main class="app wrap">
+
+    <!-- ===== Historial ===== -->
+    <aside class="history" id="history" aria-label="Historial de prompts">
+      <div class="panel-label">Historial</div>
+      <input type="search" id="search" class="search" placeholder="Buscar" aria-label="Buscar en el historial" autocomplete="off">
+      <div id="history-list" class="history-list"></div>
+      <button type="button" class="history-close only-narrow" id="btn-history-close">Cerrar</button>
+    </aside>
+    <div class="scrim" id="scrim" hidden></div>
+
+    <!-- ===== Formulario ===== -->
+    <section class="form" aria-label="Campos del prompt">
+      <div class="domain">
+        <label class="field-label" for="domain">Ámbito</label>
+        <div class="select-wrap">
+          <select id="domain"></select>
+        </div>
+        <p class="field-help" id="domain-help"></p>
+      </div>
+
+      <div id="fields"></div>
+
+      <div class="form-actions">
+        <button type="button" class="link-btn" id="btn-clear">Vaciar campos</button>
+      </div>
+    </section>
+
+    <!-- ===== Vista previa ===== -->
+    <section class="preview" aria-label="Prompt armado">
+      <div class="preview-inner">
+        <div class="preview-head">
+          <div class="panel-label">Vista previa</div>
+          <div class="seg" role="radiogroup" aria-label="Formato" id="formats"></div>
+        </div>
+
+        <div class="preview-body">
+          <pre id="output" class="output" aria-live="polite"></pre>
+          <div id="empty" class="empty">
+            <div class="empty-title">Sin prompt todavía</div>
+            <p>Rellena los campos del formulario y el prompt aparecerá aquí.</p>
+            <button type="button" class="link-btn" id="btn-example-2">Cargar ejemplo</button>
+          </div>
+        </div>
+
+        <div class="preview-actions">
+          <button type="button" class="btn primary" id="btn-copy" title="Copiar (Ctrl/⌘ + Enter)">Copiar</button>
+          <button type="button" class="btn" id="btn-export" title="Exportar (Ctrl/⌘ + S)">Exportar</button>
+          <button type="button" class="btn" id="btn-share" hidden>Compartir</button>
+        </div>
+
+        <div class="progress">
+          <div class="progress-row">
+            <span>Campos completados</span>
+            <span id="progress-text">0 de 5</span>
+          </div>
+          <div class="rail"><div class="fill" id="progress-fill"></div></div>
+          <div class="stats" id="stats"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>PromptForge — tus prompts se guardan solo en este navegador</span>
+      <span><a href="https://sidios.cl">sidios.cl</a> · © <span id="year"></span></span>
+    </div>
+  </footer>
+
+  <!-- ===== Ajustes ===== -->
+  <dialog id="settings" class="dialog" aria-labelledby="settings-title">
+    <form method="dialog" class="dialog-inner">
+      <div class="panel-label">Ajustes</div>
+      <h2 id="settings-title" class="dialog-title">Preferencias</h2>
+
+      <label class="row">
+        <span>Formato predeterminado</span>
+        <span class="select-wrap small"><select id="set-format"></select></span>
+      </label>
+      <p class="field-help">Se aplica a cada prompt nuevo.</p>
+
+      <label class="row">
+        <span>Tratamiento del rol</span>
+        <span class="select-wrap small">
+          <select id="set-feminine">
+            <option value="0">«Eres un…»</option>
+            <option value="1">«Eres una…»</option>
+          </select>
+        </span>
+      </label>
+      <p class="field-help">Se usa al insertar un rol desde «Sugerencias».</p>
+
+      <label class="row check">
+        <span>Revisar ortografía al escribir</span>
+        <input type="checkbox" id="set-spell">
+      </label>
+      <p class="field-help">Usa el corrector del navegador en español.</p>
+
+      <div class="shortcuts">
+        <div class="stack-label">Atajos</div>
+        <div><kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> Copiar prompt</div>
+        <div><kbd>Ctrl/⌘</kbd> + <kbd>S</kbd> Exportar</div>
+        <div><kbd>Alt</kbd> + <kbd>N</kbd> Nuevo prompt</div>
+        <div><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd> <kbd>Esc</kbd> Autocompletado</div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn primary" value="close">Listo</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/engine.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

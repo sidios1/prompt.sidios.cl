@@ -355,6 +355,42 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   #btn-example { display: none; }
 }
 
+/* ===================== MÓVIL: BARRA INFERIOR ===================== */
+.mbar { display: none; }
+.preview { scroll-margin-top: calc(var(--nav-h) + 16px); }
+
+@media (max-width: 834px) {
+  .mbar {
+    display: flex; align-items: center; gap: 8px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+    background: var(--nav-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--nav-rule);
+    transition: transform .25s ease;
+  }
+  .mbar.away { transform: translateY(110%); }
+  .mbar-info { margin-right: auto; font-size: 14px; letter-spacing: -0.016em; color: var(--text-2); }
+  .mbar-info strong { color: var(--text); font-variant-numeric: tabular-nums; }
+  footer { padding-bottom: 72px; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+
+/* ===================== MÓVIL: TÁCTIL Y TAMAÑOS ===================== */
+@media (max-width: 734px) {
+  /* iOS hace zoom al enfocar campos con letra < 16 px */
+  .search, .select-wrap.small select { font-size: 16px; }
+  .hero-name { font-size: clamp(38px, 12.5vw, 48px); }
+  .history-close { font-size: 17px; }
+}
+
+@media (hover: none) {
+  .hitem { padding-right: 76px; }
+  .hitem-actions { opacity: 1; gap: 4px; }
+  .icon-btn { width: 32px; height: 32px; font-size: 16px; }
+  .hide-touch { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition: none !important; }

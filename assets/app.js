@@ -434,7 +434,8 @@
     $("output").textContent = prompt;
     $("output").hidden = !prompt;
     $("empty").hidden = !!prompt;
-    ["btn-copy", "btn-export", "btn-share"].forEach((id) => { $(id).disabled = !prompt; });
+    ["btn-copy", "btn-export", "btn-share", "mbar-copy"].forEach((id) => { $(id).disabled = !prompt; });
+    $("mbar-count").textContent = `${n} de ${P.FIELDS.length}`;
 
     $("progress-text").textContent = `${n} de ${P.FIELDS.length}`;
     $("progress-fill").style.width = (n / P.FIELDS.length) * 100 + "%";
@@ -533,7 +534,13 @@
   }
 
   // ---------- Drawer de historial (pantallas angostas) ----------
-  function openDrawer() { $("history").classList.add("open"); $("scrim").hidden = false; $("search").focus(); }
+  // En pantallas táctiles no se enfoca la búsqueda: abriría el teclado sin pedirlo.
+  const isTouch = () => window.matchMedia("(hover: none)").matches;
+  function openDrawer() {
+    $("history").classList.add("open");
+    $("scrim").hidden = false;
+    if (!isTouch()) $("search").focus();
+  }
   function closeDrawer() { $("history").classList.remove("open"); $("scrim").hidden = true; }
 
   // ---------- Ajustes ----------
@@ -579,6 +586,15 @@
     $("scrim").addEventListener("click", closeDrawer);
     $("search").addEventListener("input", (ev) => { search = ev.target.value; renderHistory(); });
     $("year").textContent = new Date().getFullYear();
+
+    // Barra inferior (solo visible en móvil vía CSS): se oculta cuando la vista previa está en pantalla.
+    $("mbar-copy").addEventListener("click", copy);
+    $("mbar-view").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([entry]) => {
+        $("mbar").classList.toggle("away", entry.isIntersecting);
+      }, { threshold: 0.15 }).observe(document.querySelector(".preview-inner"));
+    }
 
     document.addEventListener("keydown", (ev) => {
       const mod = ev.metaKey || ev.ctrlKey;

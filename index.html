@@ -41,7 +41,7 @@
       <div class="panel-label">Historial</div>
       <input type="search" id="search" class="search" placeholder="Buscar" aria-label="Buscar en el historial" autocomplete="off">
       <div id="history-list" class="history-list"></div>
-      <button type="button" class="history-close only-narrow" id="btn-history-close">Cerrar</button>
+      <button type="button" class="link-btn history-close only-narrow" id="btn-history-close">Cerrar</button>
     </aside>
     <div class="scrim" id="scrim" hidden></div>
 
@@ -97,6 +97,13 @@
     </section>
   </main>
 
+  <!-- Barra inferior en móvil: acceso rápido al prompt armado -->
+  <div class="mbar" id="mbar" aria-label="Acciones del prompt">
+    <span class="mbar-info"><strong id="mbar-count">0 de 5</strong> campos</span>
+    <button type="button" class="btn" id="mbar-view">Ver prompt</button>
+    <button type="button" class="btn primary" id="mbar-copy">Copiar</button>
+  </div>
+
   <footer>
     <div class="wrap footer-inner">
       <span>PromptForge. Tus prompts se guardan solo en este navegador.</span>
@@ -132,7 +139,7 @@
       </label>
       <p class="field-help">Usa el corrector del navegador en español.</p>
 
-      <div class="shortcuts">
+      <div class="shortcuts hide-touch">
         <div class="stack-label">Atajos</div>
         <div><kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> Copiar prompt</div>
         <div><kbd>Ctrl/⌘</kbd> + <kbd>S</kbd> Exportar</div>

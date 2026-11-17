@@ -31,18 +31,34 @@
   const settings = Object.assign({ format: "xml", feminine: false, spell: true, theme: "system" }, readJSON(KEY_SETTINGS, {}));
 
   // ---------- Tema ----------
-  // "system" sigue al sistema operativo; "light" y "dark" lo fijan. index.html lo aplica antes de pintar.
+  // "system" sigue al sistema operativo hasta que se pulsa el botón; desde ahí queda fijo en
+  // "light" o "dark". index.html aplica el tema guardado antes de pintar.
   const darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
+  const isDark = () => settings.theme === "dark" || (settings.theme !== "light" && darkMQ.matches);
   function applyTheme() {
     const root = document.documentElement;
     if (settings.theme === "light" || settings.theme === "dark") root.setAttribute("data-theme", settings.theme);
     else root.removeAttribute("data-theme");
-    const dark = settings.theme === "dark" || (settings.theme !== "light" && darkMQ.matches);
+    const dark = isDark();
+    root.classList.toggle("is-dark", dark);
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
       if (settings.theme === "system") m.setAttribute("content", m.media.includes("dark") ? "#000000" : "#ffffff");
       else m.setAttribute("content", dark ? "#000000" : "#ffffff");
     });
+    const btn = document.getElementById("btn-theme");
+    if (btn) {
+      const label = dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro";
+      btn.setAttribute("aria-label", label);
+      btn.title = label;
+    }
   }
+  function toggleTheme() {
+    settings.theme = isDark() ? "light" : "dark";
+    writeJSON(KEY_SETTINGS, settings);
+    applyTheme();
+    track("cambiar_tema", { tema: settings.theme });
+  }
+  darkMQ.addEventListener("change", () => { if (settings.theme === "system") applyTheme(); });
   applyTheme();
   let entries = (readJSON(KEY_HISTORY, []) || []).filter((e) => e && e.id && e.values);
   let selectedId = null;
@@ -579,8 +595,7 @@
   // ---------- Ajustes ----------
   function initSettings() {
     const dlg = $("settings");
-    $("set-theme").value = settings.theme;
-    $("set-theme").addEventListener("change", (ev) => { settings.theme = ev.target.value; writeJSON(KEY_SETTINGS, settings); applyTheme(); });
+    $("btn-theme").addEventListener("click", toggleTheme);
     $("set-format").value = settings.format;
     $("set-feminine").value = settings.feminine ? "1" : "0";
     $("set-spell").checked = !!settings.spell;

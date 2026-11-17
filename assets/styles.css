@@ -122,21 +122,18 @@ button { font: inherit; color: inherit; letter-spacing: inherit; }
 }
 .nav-btn:hover { opacity: 1; }
 
-/* Selector de tema: menú nativo con la apariencia de los demás enlaces de la barra */
-.nav-theme { position: relative; display: flex; align-self: center; align-items: center; gap: 5px; color: var(--text); opacity: 0.8; transition: opacity .15s ease; }
-.nav-theme:hover, .nav-theme:focus-within { opacity: 1; }
-.nav-theme-icon { width: 13px; height: 13px; flex: 0 0 auto; }
-.nav-theme select {
-  font-size: 12px; letter-spacing: -0.01em; color: inherit; background: transparent;
-  border: 0; border-radius: 6px; padding: 4px 14px 4px 0; line-height: 1.2;
+/* Botón de tema: alterna claro/oscuro; muestra el ícono del tema actual */
+.nav-theme {
+  appearance: none; background: none; border: 0; cursor: pointer; align-self: center;
+  width: 32px; height: 32px; margin: 0 -8px; padding: 0; border-radius: 8px;
+  display: grid; place-items: center; color: var(--text); opacity: 0.8;
+  transition: opacity .15s ease, background-color .15s ease;
 }
-.nav-theme::after {
-  content: ""; position: absolute; right: 2px; top: 50%; width: 5px; height: 5px; pointer-events: none;
-  border-right: 1.25px solid currentColor; border-bottom: 1.25px solid currentColor;
-  transform: translateY(-70%) rotate(45deg);
-}
-.nav-theme select:focus { box-shadow: none; }
-.nav-theme select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.nav-theme:hover { opacity: 1; background: var(--hover); }
+.nav-theme svg { width: 15px; height: 15px; grid-area: 1 / 1; }
+.nav-theme .icon-moon { display: none; }
+.is-dark .nav-theme .icon-sun { display: none; }
+.is-dark .nav-theme .icon-moon { display: block; }
 
 /* ===================== HERO ===================== */
 /* La página empieza directamente con la herramienta, bajo la barra fija */
@@ -408,11 +405,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 @media (max-width: 734px) {
   /* iOS hace zoom al enfocar campos con letra < 16 px */
   .search, .select-wrap.small select { font-size: 16px; }
-  /* Tema en la barra: solo el ícono; el menú nativo (16 px, sin zoom) queda invisible encima */
-  .nav-theme { padding: 8px; margin: -8px; }
-  .nav-theme-icon { width: 16px; height: 16px; }
-  .nav-theme::after { display: none; }
-  .nav-theme select { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: 16px; padding: 0; }
   .history-close { font-size: 17px; }
 }
 

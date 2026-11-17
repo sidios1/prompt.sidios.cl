@@ -48,7 +48,7 @@
     bar.setAttribute("role", "dialog");
     bar.setAttribute("aria-label", "Uso de cookies");
     bar.innerHTML =
-      '<p>Uso Google Analytics para saber cuánta gente usa PromptForge. Tus prompts nunca se envían.</p>' +
+      '<p>Este sitio usa cookies analíticas para mejorar tu experiencia.</p>' +
       '<div class="consent-actions">' +
       '<button type="button" class="btn" data-v="denied">Rechazar</button>' +
       '<button type="button" class="btn primary" data-v="granted">Aceptar</button>' +

@@ -525,3 +525,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 @media (min-width: 835px) and (max-width: 1180px) and (min-height: 600px) {
   .app { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
 }
+
+/* Los paneles con scroll propio no arrastran la página al llegar a su borde */
+.preview-body, textarea, .history-list, .chips, .pop { overscroll-behavior: contain; }

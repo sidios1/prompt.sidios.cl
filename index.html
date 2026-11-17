@@ -5,34 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PromptForge · sidios</title>
   <meta name="description" content="PromptForge — arma prompts claros con la estructura Rol, Contexto, Objetivo, Salida y Restricciones. Sugerencias por ámbito, historial y exportación.">
-  <meta name="theme-color" content="#f7f7f9">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
 
-  <nav>
-    <div class="nav-left">
+  <nav class="nav" aria-label="Principal">
+    <div class="nav-inner wrap">
       <a href="https://sidios.cl" class="nav-brand">sidios</a>
-      <span class="nav-sep">/</span>
-      <a href="./" class="nav-app">prompt</a>
-    </div>
-    <div class="nav-links">
-      <button type="button" class="nav-btn only-narrow" id="btn-history">Historial</button>
-      <button type="button" class="nav-btn" id="btn-new" title="Nuevo prompt (Alt+N)">Nuevo</button>
-      <button type="button" class="nav-btn" id="btn-example">Ejemplo</button>
-      <button type="button" class="nav-btn" id="btn-settings">Ajustes</button>
+      <a href="./" class="nav-app">PromptForge</a>
+      <div class="nav-links">
+        <button type="button" class="nav-btn only-narrow" id="btn-history">Historial</button>
+        <button type="button" class="nav-btn" id="btn-new" title="Nuevo prompt (Alt+N)">Nuevo</button>
+        <button type="button" class="nav-btn" id="btn-example">Ejemplo</button>
+        <button type="button" class="nav-btn" id="btn-settings">Ajustes</button>
+      </div>
     </div>
   </nav>
 
   <header class="hero wrap">
-    <div class="eyebrow">Herramienta · Prompt engineering</div>
-    <h1 class="hero-name">PromptForge<span class="dot">.</span></h1>
-    <p class="hero-tagline">Cinco campos, <span class="pole">un prompt claro</span>. Rol, contexto, objetivo, salida y restricciones — con sugerencias según lo que escribes.</p>
+    <p class="hero-kicker">Herramienta de prompt engineering</p>
+    <h1 class="hero-name">PromptForge</h1>
+    <p class="hero-tagline">Cinco campos. Un prompt claro.</p>
+    <p class="hero-sub">Rol, contexto, objetivo, salida y restricciones, con sugerencias que se adaptan a lo que escribes.</p>
   </header>
 
   <main class="app wrap">
@@ -100,7 +99,7 @@
 
   <footer>
     <div class="wrap footer-inner">
-      <span>PromptForge — tus prompts se guardan solo en este navegador</span>
+      <span>PromptForge. Tus prompts se guardan solo en este navegador.</span>
       <span><a href="https://sidios.cl">sidios.cl</a> · © <span id="year"></span></span>
     </div>
   </footer>
@@ -108,8 +107,7 @@
   <!-- ===== Ajustes ===== -->
   <dialog id="settings" class="dialog" aria-labelledby="settings-title">
     <form method="dialog" class="dialog-inner">
-      <div class="panel-label">Ajustes</div>
-      <h2 id="settings-title" class="dialog-title">Preferencias</h2>
+      <h2 id="settings-title" class="dialog-title">Ajustes</h2>
 
       <label class="row">
         <span>Formato predeterminado</span>

@@ -3,7 +3,7 @@
 Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto · Objetivo · Salida · Restricciones**, con sugerencias según el ámbito detectado, historial local y exportación en Texto, Markdown o XML.
 
 - Sitio estático (HTML/CSS/JS sin build) publicado con GitHub Pages en `https://prompt.sidios.cl`.
-- Estética de [sidios.cl](https://sidios.cl): Space Grotesk, JetBrains Mono y acento teal `oklch(0.56 0.11 202)`.
+- Estética de [sidios.cl](https://sidios.cl): estilo Apple, tipografía del sistema (SF Pro), azul `#0071e3` y modo oscuro automático.
 - Los prompts se guardan solo en el `localStorage` del navegador.
 
 ## Estructura

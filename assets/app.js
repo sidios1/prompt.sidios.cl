@@ -197,7 +197,7 @@
       const menuAnchor = f.id === "restricciones" ? null : el("div", { class: "menu-anchor" }, [
         el("button", {
           type: "button", class: "menu-btn", "aria-haspopup": "true", "aria-expanded": "false",
-          title: `Insertar una sugerencia en «${f.title}»`, text: "Sugerencias ▾",
+          title: `Insertar una sugerencia en «${f.title}»`, text: "Sugerencias",
           onclick: (ev) => toggleMenu(f.id, ev.currentTarget),
         }),
       ]);
@@ -210,7 +210,6 @@
       host.append(el("div", { class: "field", id: "field-" + f.id }, [
         el("div", { class: "field-head" }, [
           el("label", { for: "f-" + f.id }, [
-            el("span", { class: "field-idx", text: String(i + 1).padStart(2, "0") }),
             el("span", { class: "field-title", text: f.title }),
           ]),
           menuAnchor,

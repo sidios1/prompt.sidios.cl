@@ -4,19 +4,19 @@
 
   const FIELDS = [
     { id: "rol", title: "Rol",
-      placeholder: "Eres un…",
+      placeholder: "Ej.: Eres un nutricionista deportivo con 10 años de experiencia",
       help: "Quién debe ser el modelo: experiencia, especialidad y perspectiva." },
     { id: "contexto", title: "Contexto",
-      placeholder: "Situación, proyecto, audiencia, datos relevantes…",
+      placeholder: "Ej.: Preparo mi primera media maratón en 12 semanas. Entreno 4 días por semana y trabajo en oficina.",
       help: "La información de fondo que el modelo necesita para entender la tarea." },
     { id: "objetivo", title: "Objetivo",
-      placeholder: "Qué debe lograr el modelo…",
+      placeholder: "Ej.: Diseña un plan de alimentación semanal que acompañe el entrenamiento.",
       help: "La tarea concreta, con verbo de acción y criterio de éxito." },
     { id: "salida", title: "Salida",
-      placeholder: "Formato, extensión y estructura de la respuesta…",
+      placeholder: "Ej.: Una tabla por día con desayuno, almuerzo, cena y colaciones, más la lista de compras.",
       help: "Cómo debe verse la respuesta final." },
     { id: "restricciones", title: "Restricciones",
-      placeholder: "- Una regla por línea…",
+      placeholder: "Ej.:\n- Sin lactosa\n- Recetas de menos de 30 minutos\n- Responde en español",
       help: "Límites y reglas que el modelo no debe romper." },
   ];
 

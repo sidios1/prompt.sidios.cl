@@ -7,7 +7,7 @@
   --pop: #ffffff;
   --text: #1d1d1f;
   --text-2: #6e6e73;
-  --text-3: #86868b;
+  --text-3: #6e6e73;
   --link: #0066cc;
   --button: #0071e3;
   --button-hover: #0077ed;
@@ -18,6 +18,7 @@
   --seg-on: #ffffff;
   --seg-on-ring: rgba(0, 0, 0, 0.08);
   --hover: rgba(0, 0, 0, 0.04);
+  --btn-hover: rgba(0, 0, 0, 0.1);
   --active: rgba(0, 113, 227, 0.1);
   --focus: rgba(0, 113, 227, 0.6);
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
@@ -49,6 +50,7 @@
   --seg-on: #636366;
   --seg-on-ring: rgba(255, 255, 255, 0.04);
   --hover: rgba(255, 255, 255, 0.06);
+  --btn-hover: rgba(255, 255, 255, 0.14);
   --active: rgba(41, 151, 255, 0.16);
   --focus: rgba(41, 151, 255, 0.7);
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
@@ -71,6 +73,7 @@
     --seg-on: #636366;
     --seg-on-ring: rgba(255, 255, 255, 0.04);
     --hover: rgba(255, 255, 255, 0.06);
+  --btn-hover: rgba(255, 255, 255, 0.14);
     --active: rgba(41, 151, 255, 0.16);
     --focus: rgba(41, 151, 255, 0.7);
     --shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
@@ -95,7 +98,9 @@ h1, h2, h3, p { margin: 0; }
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font: inherit; color: inherit; letter-spacing: inherit; }
-:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
+/* Campos: un solo anillo (box-shadow) y sin cambiar sus esquinas */
+textarea:focus-visible, select:focus-visible, .search:focus-visible { outline: none; }
 ::selection { background: rgba(0, 113, 227, 0.22); }
 [hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -117,7 +122,7 @@ button { font: inherit; color: inherit; letter-spacing: inherit; }
 .nav-links { display: flex; gap: 28px; margin-left: auto; }
 .nav-btn {
   appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
-  font-size: 12px; letter-spacing: -0.01em; color: var(--text); opacity: 0.8;
+  font-size: 13px; letter-spacing: -0.01em; color: var(--text); opacity: 0.88;
   line-height: var(--nav-h); white-space: nowrap; transition: opacity .15s ease;
 }
 .nav-btn:hover { opacity: 1; }
@@ -153,7 +158,8 @@ main.app { margin-top: var(--nav-h); }
 
 /* ===================== HISTORIAL ===================== */
 .history { position: sticky; top: calc(var(--nav-h) + 24px); max-height: calc(100vh - var(--nav-h) - 48px); display: flex; flex-direction: column; }
-.history .panel-label { margin-bottom: 16px; }
+.history-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.history-close { font-size: 15px; }
 .search {
   width: 100%; font: inherit; font-size: 14px; letter-spacing: -0.016em;
   padding: 7px 12px; border: 0; border-radius: 9px; background: var(--seg-track); color: var(--text); outline: none;
@@ -163,15 +169,17 @@ main.app { margin-top: var(--nav-h); }
 .history-list { overflow-y: auto; margin-top: 16px; flex: 1; min-height: 0; padding: 0 2px; }
 .hgroup { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-2); margin: 20px 8px 6px; }
 .hgroup:first-child { margin-top: 0; }
-.hitem {
-  position: relative; display: block; width: 100%; text-align: left; cursor: default;
-  padding: 8px 56px 8px 10px; border-radius: 10px; transition: background-color .15s ease;
+.hitem { position: relative; border-radius: 10px; transition: background-color .15s ease; }
+.hitem-main {
+  appearance: none; background: none; border: 0; margin: 0; display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 8px 56px 8px 10px; border-radius: inherit; color: inherit;
 }
 .hitem:hover { background: var(--hover); }
 .hitem.active { background: var(--active); }
-.hitem-title { font-size: 14px; font-weight: 600; letter-spacing: -0.016em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hitem-main:focus-visible { outline-offset: -2px; }
+.hitem-title { display: block; font-size: 14px; font-weight: 600; letter-spacing: -0.016em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hitem-sub { display: flex; gap: 6px; font-size: 12px; letter-spacing: -0.01em; color: var(--text-2); white-space: nowrap; overflow: hidden; margin-top: 1px; }
-.hitem-sub .d { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--text); opacity: .7; }
+.hitem-sub .d { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--text-2); }
 .hitem-sub .p { overflow: hidden; text-overflow: ellipsis; }
 .hitem-actions { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
 .hitem:hover .hitem-actions, .hitem:focus-within .hitem-actions, .hitem.active .hitem-actions { opacity: 1; }
@@ -181,7 +189,6 @@ main.app { margin-top: var(--nav-h); }
 }
 .icon-btn:hover { background: var(--hover); color: var(--text); }
 .history-empty { font-size: 14px; color: var(--text-2); padding: 8px; }
-.history-close { margin-top: 16px; }
 .scrim { display: none; }
 
 /* ===================== FORMULARIO ===================== */
@@ -207,7 +214,7 @@ select:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus); 
 .field { padding: 32px 0; border-bottom: 1px solid var(--rule); }
 .field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .field-title { font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: 0.007em; }
-.field .field-help { margin: 6px 0 16px; }
+.field .field-help { margin: 4px 0 14px; }
 
 .input-wrap { position: relative; }
 textarea {
@@ -236,6 +243,12 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
   font-size: 13px; letter-spacing: -0.01em; color: #fff; background: var(--button);
 }
 .ghost-accept[hidden] { display: none; }
+.ghost-tip {
+  position: absolute; right: 8px; bottom: 6px; z-index: 2; pointer-events: none;
+  font-size: 11px; letter-spacing: -0.005em; color: var(--text-2);
+  background: var(--field); padding: 1px 6px; border-radius: 6px;
+}
+.ghost-tip kbd { font-size: 11px; padding: 0 5px; }
 
 .form-actions { padding-top: 16px; }
 .form-actions .link-btn { color: var(--text-2); }
@@ -252,7 +265,7 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
 
 .seg { display: inline-flex; padding: 2px; border-radius: 9px; background: var(--seg-track); }
 .seg button {
-  appearance: none; border: 0; margin: 0; height: 28px; padding: 0 12px; border-radius: 7px; cursor: default;
+  appearance: none; border: 0; margin: 0; height: 28px; padding: 0 12px; border-radius: 7px; cursor: pointer;
   background: transparent; color: var(--text); font-size: 13px; letter-spacing: -0.01em; transition: background-color .15s ease;
 }
 .seg button[aria-checked="true"] { background: var(--seg-on); font-weight: 600; box-shadow: 0 0 0 0.5px var(--seg-on-ring), 0 1px 2px rgba(0,0,0,.06); }
@@ -261,7 +274,6 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
 .output { margin: 0; padding: 18px; white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 13px; line-height: 1.6; letter-spacing: 0; color: var(--text); }
 .empty { padding: 18px; }
 .empty p { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.47; }
-.empty .link-btn { font-size: 15px; }
 
 .preview-actions { display: flex; gap: 8px; padding: 12px 0 0; flex-wrap: wrap; align-items: center; }
 /* Secundario: gris neutro. Primario (uno por vista): azul. */
@@ -270,7 +282,7 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
   font-size: 14px; line-height: 1.2; letter-spacing: -0.016em;
   background: var(--seg-track); color: var(--text); transition: background-color .15s ease, opacity .15s ease;
 }
-.btn:hover:not(:disabled) { background: var(--hover); box-shadow: inset 0 0 0 100px var(--hover); }
+.btn:hover:not(:disabled) { background: var(--btn-hover); }
 .btn.primary { background: var(--button); color: #fff; }
 .btn.primary:hover:not(:disabled) { background: var(--button-hover); }
 .btn:disabled { opacity: .35; cursor: default; }
@@ -293,12 +305,13 @@ footer { background: var(--bg-alt); color: var(--text-2); font-size: 12px; line-
 }
 .dialog::backdrop { background: rgba(0,0,0,0.3); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .dialog-inner { padding: 28px; }
+.dialog-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.dialog-close { margin: -4px -8px 0 0; width: 32px; height: 32px; font-size: 20px; border-radius: 980px; }
 .dialog-title { font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: 0.007em; margin-bottom: 20px; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; border-top: 1px solid var(--rule); }
 .row > span:first-child { font-size: 17px; }
 .dialog .select-wrap.small select { width: 150px; }
 .row.check input { width: 20px; height: 20px; accent-color: var(--button); }
-.dialog .field-help { margin: 6px 0 16px; font-size: 13px; }
 .shortcuts { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 0; font-size: 14px; color: var(--text-2); display: grid; gap: 8px; }
 .shortcuts .stack-label { margin-bottom: 4px; }
 kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1px 6px; color: var(--text); background: var(--seg-track); }
@@ -327,7 +340,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   }
   .history.open { transform: none; }
   .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 55; }
-  .history-close { align-self: flex-start; }
 }
 
 @media (max-width: 834px) {
@@ -345,7 +357,6 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 
 @media (max-width: 420px) {
   .nav-app { display: none; }
-  #btn-example { display: none; }
 }
 
 /* ===================== MÓVIL: BARRA INFERIOR ===================== */
@@ -374,10 +385,11 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   /* iOS hace zoom al enfocar campos con letra < 16 px */
   .search, .select-wrap.small select { font-size: 16px; }
   .history-close { font-size: 17px; }
+  .history-close { min-height: 44px; }
 }
 
 @media (hover: none) {
-  .hitem { padding-right: 76px; }
+  .hitem-main { padding-right: 76px; }
   .hitem-actions { opacity: 1; gap: 4px; }
   .icon-btn { width: 32px; height: 32px; font-size: 16px; }
   .hide-touch { display: none; }
@@ -422,7 +434,7 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   .app > * { min-height: 0; }
 
   /* Historial y vista previa llenan la columna */
-  .history .panel-label { margin-bottom: 12px; }
+  .history-head { margin-bottom: 12px; }
   .history-list { margin-top: 12px; }
   .preview { position: static; height: 100%; }
   .preview-inner { height: 100%; max-height: none; }
@@ -475,6 +487,13 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
 
 @media (min-width: 1181px) and (min-height: 600px) {
   .history { position: static; max-height: none; height: 100%; }
+}
+
+/* Entre 835 y 960 px: campos en una columna con scroll, para que no queden demasiado angostos */
+@media (min-width: 835px) and (max-width: 960px) and (min-height: 600px) {
+  #fields { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(120px, auto); overflow-y: auto; padding-right: 4px; }
+  #field-restricciones { grid-column: auto; }
+  .fit-layout textarea { min-height: 88px; }
 }
 
 /* Historial como panel lateral (1180 px o menos): sin columna propia */

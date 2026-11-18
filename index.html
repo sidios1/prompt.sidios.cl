@@ -18,7 +18,7 @@
     } catch (e) {}
   </script>
 
-  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17e">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17h">
 </head>
 <body>
 
@@ -27,9 +27,8 @@
       <a href="https://sidios.cl" class="nav-brand">sidios</a>
       <a href="./" class="nav-app">PromptForge</a>
       <div class="nav-links">
-        <button type="button" class="nav-btn only-narrow" id="btn-history">Historial</button>
+        <button type="button" class="nav-btn only-narrow" id="btn-history" aria-controls="history" aria-expanded="false">Historial</button>
         <button type="button" class="nav-btn" id="btn-new" title="Nuevo prompt (Alt+N)">Nuevo</button>
-        <button type="button" class="nav-btn" id="btn-example">Ejemplo</button>
         <button type="button" class="nav-btn" id="btn-settings">Ajustes</button>
         <button type="button" class="nav-theme" id="btn-theme">
           <svg class="icon-sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v1.75M8 13.25V15M1 8h1.75M13.25 8H15M3.05 3.05l1.24 1.24M11.71 11.71l1.24 1.24M3.05 12.95l1.24-1.24M11.71 4.29l1.24-1.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -45,10 +44,12 @@
 
     <!-- ===== Historial ===== -->
     <aside class="history" id="history" aria-label="Historial de prompts">
-      <div class="panel-label">Historial</div>
+      <div class="history-head">
+        <h2 class="panel-label">Historial</h2>
+        <button type="button" class="link-btn history-close only-narrow" id="btn-history-close">Cerrar</button>
+      </div>
       <input type="search" id="search" class="search" placeholder="Buscar" aria-label="Buscar en el historial" autocomplete="off">
       <div id="history-list" class="history-list"></div>
-      <button type="button" class="link-btn history-close only-narrow" id="btn-history-close">Cerrar</button>
     </aside>
     <div class="scrim" id="scrim" hidden></div>
 
@@ -71,14 +72,14 @@
     <section class="preview" aria-label="Prompt armado">
       <div class="preview-inner">
         <div class="preview-head">
-          <div class="panel-label">Vista previa</div>
+          <h2 class="panel-label">Vista previa</h2>
           <div class="seg" role="radiogroup" aria-label="Plataforma" id="formats"></div>
         </div>
 
         <div class="preview-body">
           <pre id="output" class="output" aria-live="polite"></pre>
           <div id="empty" class="empty">
-            <p>El prompt aparece aquí a medida que escribes. <button type="button" class="link-btn" id="btn-example-2">Cargar ejemplo</button></p>
+            <p>El prompt aparece aquí a medida que escribes.</p>
           </div>
         </div>
 
@@ -94,7 +95,7 @@
   </main>
 
   <!-- Barra inferior en móvil: acceso rápido al prompt armado -->
-  <div class="mbar" id="mbar" aria-label="Acciones del prompt">
+  <div class="mbar" id="mbar" role="region" aria-label="Acciones del prompt">
     <span class="mbar-info"><strong id="mbar-count">0 de 5</strong> campos</span>
     <button type="button" class="btn" id="mbar-view">Ver prompt</button>
     <button type="button" class="btn primary" id="mbar-copy">Copiar</button>
@@ -116,7 +117,21 @@
   <!-- ===== Ajustes ===== -->
   <dialog id="settings" class="dialog" aria-labelledby="settings-title">
     <form method="dialog" class="dialog-inner">
-      <h2 id="settings-title" class="dialog-title">Ajustes</h2>
+      <div class="dialog-head">
+        <h2 id="settings-title" class="dialog-title">Ajustes</h2>
+        <button class="icon-btn dialog-close" value="close" aria-label="Cerrar ajustes" title="Cerrar">×</button>
+      </div>
+
+      <label class="row">
+        <span>Tema</span>
+        <span class="select-wrap small">
+          <select id="set-theme">
+            <option value="system">Automático</option>
+            <option value="light">Claro</option>
+            <option value="dark">Oscuro</option>
+          </select>
+        </span>
+      </label>
 
       <label class="row">
         <span>Plataforma predeterminada</span>
@@ -155,12 +170,13 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="announcer" role="status" aria-live="polite"></div>
 
-  <script src="assets/analytics.js?v=2026-11-17e"></script>
-  <script src="assets/data.js?v=2026-11-17e"></script>
-  <script src="assets/lexicon-freq.js?v=2026-11-17e"></script>
-  <script src="assets/lexicon.js?v=2026-11-17e"></script>
-  <script src="assets/engine.js?v=2026-11-17e"></script>
-  <script src="assets/app.js?v=2026-11-17e"></script>
+  <script src="assets/analytics.js?v=2026-11-17h"></script>
+  <script src="assets/data.js?v=2026-11-17h"></script>
+  <script src="assets/lexicon-freq.js?v=2026-11-17h"></script>
+  <script src="assets/lexicon.js?v=2026-11-17h"></script>
+  <script src="assets/engine.js?v=2026-11-17h"></script>
+  <script src="assets/app.js?v=2026-11-17h"></script>
 </body>
 </html>

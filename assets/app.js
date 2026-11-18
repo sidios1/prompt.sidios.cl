@@ -28,7 +28,8 @@
   const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 
   // ---------- Estado ----------
-  const settings = Object.assign({ format: "claude", feminine: false, spell: true, theme: "system" }, readJSON(KEY_SETTINGS, {}));
+  const settings = Object.assign({ format: "claude", feminine: false, spell: true, theme: "system", tipSeen: false }, readJSON(KEY_SETTINGS, {}));
+  const announce = (msg) => { const a = $("announcer"); if (!a) return; a.textContent = ""; setTimeout(() => { a.textContent = msg; }, 50); };
 
   // ---------- Tema ----------
   // "system" sigue al sistema operativo hasta que se pulsa el botón; desde ahí queda fijo en
@@ -51,6 +52,8 @@
       btn.setAttribute("aria-label", label);
       btn.title = label;
     }
+    const sel = document.getElementById("set-theme");
+    if (sel) sel.value = settings.theme;
   }
   function toggleTheme() {
     settings.theme = isDark() ? "light" : "dark";
@@ -179,26 +182,24 @@
       list.append(el("div", { class: "hgroup", text: title }));
       for (const e of items) {
         const preview = P.entryPreview(e);
-        list.append(el("div", {
-          class: "hitem" + (e.id === selectedId ? " active" : ""),
-          role: "button", tabindex: "0",
-          "aria-current": e.id === selectedId ? "true" : null,
-          onclick: () => select(e.id),
-          onkeydown: (ev) => {
-            if (ev.target !== ev.currentTarget) return;
-            if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(e.id); }
-            if (ev.key === "Delete" || ev.key === "Backspace") { ev.preventDefault(); remove(e.id); }
-          },
-        }, [
-          el("div", { class: "hitem-title", text: P.entryTitle(e) }),
-          el("div", { class: "hitem-sub" }, [
-            el("span", { class: "d", text: dateText(e.modified) }),
-            el("span", { class: "p", text: preview || "Sin más texto" }),
+        const title = P.entryTitle(e);
+        list.append(el("div", { class: "hitem" + (e.id === selectedId ? " active" : "") }, [
+          el("button", {
+            type: "button", class: "hitem-main",
+            "aria-current": e.id === selectedId ? "true" : null,
+            onclick: () => select(e.id),
+            onkeydown: (ev) => { if (ev.key === "Delete") { ev.preventDefault(); remove(e.id); } },
+          }, [
+            el("span", { class: "hitem-title", text: title }),
+            el("span", { class: "hitem-sub" }, [
+              el("span", { class: "d", text: dateText(e.modified) }),
+              el("span", { class: "p", text: preview || "Sin más texto" }),
+            ]),
           ]),
           el("div", { class: "hitem-actions" }, [
-            el("button", { type: "button", class: "icon-btn", title: "Duplicar", "aria-label": "Duplicar", text: "⧉",
+            el("button", { type: "button", class: "icon-btn", title: "Duplicar", "aria-label": `Duplicar «${title}»`, text: "⧉",
               onclick: (ev) => { ev.stopPropagation(); duplicate(e.id); } }),
-            el("button", { type: "button", class: "icon-btn", title: "Eliminar", "aria-label": "Eliminar", text: "×",
+            el("button", { type: "button", class: "icon-btn", title: "Eliminar", "aria-label": `Eliminar «${title}»`, text: "×",
               onclick: (ev) => { ev.stopPropagation(); remove(e.id); } }),
           ]),
         ]));
@@ -235,17 +236,18 @@
         onmousedown: (ev) => ev.preventDefault(),
         onclick: () => acceptGhost(f.id, false),
       });
-      const wrap = el("div", { class: "input-wrap" }, [ta, layer, accept]);
+      const tip = el("span", { class: "ghost-tip", "aria-hidden": "true", hidden: true }, [el("kbd", { text: "Tab" }), " completa"]);
+      const wrap = el("div", { class: "input-wrap" }, [ta, layer, accept, tip]);
       host.append(el("div", { class: "field", id: "field-" + f.id }, [
         el("div", { class: "field-head" }, [
           el("label", { for: "f-" + f.id }, [
             el("span", { class: "field-title", text: f.title }),
           ]),
         ]),
-        el("p", { class: "sr-only", id: "h-" + f.id, text: f.help }),
+        el("p", { class: "field-help", id: "h-" + f.id, text: f.help }),
         wrap,
       ]));
-      fieldRefs[f.id] = { ta, wrap, layer, accept };
+      fieldRefs[f.id] = { ta, wrap, layer, accept, tip };
     });
     requestAnimationFrame(() => P.FIELDS.forEach((f) => autosize(f.id)));
   }
@@ -345,6 +347,7 @@
     const full = P.predict(field, ta.value, { model: predictionModel(domain), domain, feminine: settings.feminine, values: e.values });
     if (!full) { clearGhost(); return; }
     if (ghost && ghost.field !== field) clearGhost();
+    if (!ghost) announce(isTouch() ? "Predicción disponible. Usa Completar para aceptarla." : "Predicción disponible. Tab para aceptarla, Escape para descartarla.");
     ghost = { field, full };
     const { layer, wrap, accept } = refs;
     syncLayer(ta, layer);
@@ -354,6 +357,7 @@
     );
     wrap.classList.add("has-ghost");
     accept.hidden = !isTouch();
+    refs.tip.hidden = isTouch() || settings.tipSeen;
     autosize(field);
     syncLayer(ta, layer);
     layer.scrollTop = ta.scrollTop;
@@ -368,6 +372,7 @@
     refs.layer.replaceChildren();
     refs.wrap.classList.remove("has-ghost");
     refs.accept.hidden = true;
+    refs.tip.hidden = true;
     autosize(field);
   }
 
@@ -375,6 +380,7 @@
     if (!ghost || ghost.field !== field) return false;
     const text = fieldRefs[field].ta.value;
     setValue(field, wordOnly ? P.acceptWord(text, ghost.full) : ghost.full);
+    if (!settings.tipSeen) { settings.tipSeen = true; writeJSON(KEY_SETTINGS, settings); }
     track("aceptar_prediccion", { campo: field, modo: wordOnly ? "palabra" : "completa" });
     return true;
   }
@@ -408,12 +414,36 @@
   // ---------- Formatos ----------
   function initFormats() {
     const host = $("formats");
+    const choose = (id) => { current().format = id; scheduleSave(); refresh(); };
     P.FORMATS.forEach((f) => host.append(el("button", {
       type: "button", role: "radio", "data-format": f.id, text: f.name,
-      onclick: () => { current().format = f.id; scheduleSave(); refresh(); },
+      onclick: () => choose(f.id),
     })));
+    // Grupo de radio: una sola parada de Tab; las flechas cambian la opción.
+    host.addEventListener("keydown", (ev) => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[ev.key];
+      if (!step) return;
+      ev.preventDefault();
+      const ids = P.FORMATS.map((f) => f.id);
+      const next = ids[(ids.indexOf(current().format) + step + ids.length) % ids.length];
+      choose(next);
+      host.querySelector(`[data-format="${next}"]`).focus();
+    });
     const setSel = $("set-format");
     P.FORMATS.forEach((f) => setSel.append(el("option", { value: f.id, text: f.name })));
+  }
+
+  // ---------- Placeholders según el ámbito ----------
+  // Cada ámbito trae un ejemplo coherente; cambia al elegir otro ámbito o al detectarse uno.
+  function placeholderFor(field, domain) {
+    const ex = domain.ejemplo || C.general.ejemplo;
+    if (field === "rol") return `Ej.: Eres ${settings.feminine ? "una" : "un"} ${settings.feminine ? ex.rol.f : ex.rol.m}`;
+    if (field === "restricciones") return "Ej.:\n" + ex.restricciones.map((r) => "- " + r).join("\n");
+    return "Ej.: " + ex[field];
+  }
+  function updatePlaceholders() {
+    const domain = activeDomain(current());
+    P.FIELDS.forEach((f) => { const r = fieldRefs[f.id]; if (r) r.ta.placeholder = placeholderFor(f.id, domain); });
   }
 
   // ---------- Refresco general ----------
@@ -432,11 +462,12 @@
       ? `${n} de ${P.FIELDS.length} campos, ${prompt.length.toLocaleString("es-CL")} caracteres, ~${Math.ceil(prompt.length / 4).toLocaleString("es-CL")} tokens`
       : "";
 
-    document.querySelectorAll("#formats button").forEach((b) => b.setAttribute("aria-checked", b.dataset.format === e.format ? "true" : "false"));
+    document.querySelectorAll("#formats button").forEach((b) => { const on = b.dataset.format === e.format; b.setAttribute("aria-checked", on ? "true" : "false"); b.tabIndex = on ? 0 : -1; });
 
     $("domain").value = e.domainOverride || "";
     $("domain").options[0].textContent = `Automático (${P.detectDomain(e.values).name})`;
 
+    updatePlaceholders();
     renderHistory();
     document.title = (P.isEmptyEntry(e) ? "PromptForge" : P.entryTitle(e).slice(0, 48) + " · PromptForge") + " · sidios";
   }
@@ -447,15 +478,19 @@
   async function copy() {
     const text = promptText();
     if (!text) return;
+    let ok = false;
     try {
       await navigator.clipboard.writeText(text);
+      ok = true;
     } catch (_) {
-      const t = el("textarea", { style: "position:fixed;opacity:0" });
+      const t = el("textarea", { style: "position:fixed;opacity:0", "aria-hidden": "true" });
       t.value = text; document.body.append(t); t.select();
-      try { document.execCommand("copy"); } catch (__) {}
+      try { ok = document.execCommand("copy"); } catch (__) {}
       t.remove();
     }
+    if (!ok) { toast("No se pudo copiar. Selecciona el texto de la vista previa y cópialo a mano."); return; }
     flashCopied();
+    announce("Prompt copiado al portapapeles");
     track("copiar_prompt", { formato: current().format });
   }
 
@@ -476,23 +511,6 @@
     const text = promptText();
     if (!text || !navigator.share) return;
     try { await navigator.share({ title: P.entryTitle(current()), text }); track("compartir_prompt"); } catch (_) {}
-  }
-
-  function loadExample() {
-    track("cargar_ejemplo");
-    const e = current();
-    e.values = {
-      rol: "Eres un ingeniero experto en prompt engineering",
-      contexto: "Estás trabajando en una aplicación web para creación de prompts usando prompt engineering (Rol, Contexto, Objetivo, Salida, Restricciones).",
-      objetivo: "Realiza una aplicación de tipo formulario en la que se rellenen los 5 campos y como salida aparezca el prompt armado, con sugerencias contextuales al escribir.",
-      salida: "App funcional, con instrucciones para publicarla en GitHub Pages.",
-      restricciones: "- Usa HTML, CSS y JavaScript sin dependencias externas\n- Responde en español\n- Explica brevemente cada decisión de diseño",
-    };
-    e.domainOverride = null;
-    e.modified = Date.now();
-    renderFields();
-    refresh();
-    scheduleSave();
   }
 
   function clearFields() {
@@ -520,25 +538,56 @@
   }
 
   // ---------- Toast ----------
+  // Con acción (Deshacer) dura más y se pausa mientras el puntero o el foco están encima.
   let toastTimer = null;
+  let toastDelay = 0;
+  function hideToastLater() { clearTimeout(toastTimer); toastTimer = setTimeout(() => $("toast").classList.remove("show"), toastDelay); }
   function toast(msg, actionLabel, action) {
     const t = $("toast");
     t.replaceChildren(el("span", { text: msg }));
     if (actionLabel) t.append(el("button", { type: "button", text: actionLabel, onclick: () => { t.classList.remove("show"); action(); } }));
     t.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove("show"), actionLabel ? 5000 : 2200);
+    toastDelay = actionLabel ? 8000 : 3500;
+    hideToastLater();
+  }
+  function initToast() {
+    const t = $("toast");
+    const pause = () => clearTimeout(toastTimer);
+    const resume = () => { if (t.classList.contains("show") && !t.matches(":hover, :focus-within")) hideToastLater(); };
+    t.addEventListener("mouseenter", pause);
+    t.addEventListener("focusin", pause);
+    t.addEventListener("mouseleave", resume);
+    t.addEventListener("focusout", () => setTimeout(resume, 0));
   }
 
   // ---------- Drawer de historial (pantallas angostas) ----------
   // En pantallas táctiles no se enfoca la búsqueda: abriría el teclado sin pedirlo.
   const isTouch = () => window.matchMedia("(hover: none)").matches;
+  // Con el cajón cerrado su contenido queda inerte (no se alcanza con Tab);
+  // abierto, lo inerte es el resto de la página.
+  const drawerMQ = window.matchMedia("(max-width: 1180px)");
+  const behindDrawer = () => [document.querySelector(".nav"), document.querySelector(".form"), document.querySelector(".preview"), $("mbar"), document.querySelector("footer")];
+  function syncDrawer() {
+    const open = $("history").classList.contains("open");
+    const drawer = drawerMQ.matches;
+    $("history").inert = drawer && !open;
+    behindDrawer().forEach((n) => { if (n) n.inert = drawer && open; });
+    $("btn-history").setAttribute("aria-expanded", open ? "true" : "false");
+  }
   function openDrawer() {
     $("history").classList.add("open");
     $("scrim").hidden = false;
-    if (!isTouch()) $("search").focus();
+    syncDrawer();
+    if (!isTouch()) $("search").focus(); else $("btn-history-close").focus();
   }
-  function closeDrawer() { $("history").classList.remove("open"); $("scrim").hidden = true; }
+  function closeDrawer() {
+    const wasOpen = $("history").classList.contains("open");
+    $("history").classList.remove("open");
+    $("scrim").hidden = true;
+    syncDrawer();
+    if (wasOpen && drawerMQ.matches && $("history").contains(document.activeElement) || wasOpen && document.activeElement === document.body) $("btn-history").focus();
+  }
+  drawerMQ.addEventListener("change", () => { if (!drawerMQ.matches) closeDrawer(); syncDrawer(); });
 
   // ---------- Ajustes ----------
   function initSettings() {
@@ -547,8 +596,15 @@
     $("set-format").value = settings.format;
     $("set-feminine").value = settings.feminine ? "1" : "0";
     $("set-spell").checked = !!settings.spell;
+    $("set-theme").value = settings.theme;
+    $("set-theme").addEventListener("change", (ev) => {
+      settings.theme = ev.target.value;
+      writeJSON(KEY_SETTINGS, settings);
+      applyTheme();
+      track("cambiar_tema", { tema: settings.theme });
+    });
     $("set-format").addEventListener("change", (ev) => { settings.format = ev.target.value; writeJSON(KEY_SETTINGS, settings); });
-    $("set-feminine").addEventListener("change", (ev) => { settings.feminine = ev.target.value === "1"; writeJSON(KEY_SETTINGS, settings); });
+    $("set-feminine").addEventListener("change", (ev) => { settings.feminine = ev.target.value === "1"; writeJSON(KEY_SETTINGS, settings); updatePlaceholders(); });
     $("set-spell").addEventListener("change", (ev) => {
       settings.spell = ev.target.checked;
       writeJSON(KEY_SETTINGS, settings);
@@ -564,6 +620,8 @@
     initDomainSelect();
     initFormats();
     initSettings();
+    initToast();
+    syncDrawer();
 
     const stored = readJSON(KEY_SELECTED, null);
     if (!entries.length) entries.push(newEntry());
@@ -573,8 +631,6 @@
     refresh();
 
     $("btn-new").addEventListener("click", newPrompt);
-    $("btn-example").addEventListener("click", loadExample);
-    $("btn-example-2").addEventListener("click", loadExample);
     $("btn-clear").addEventListener("click", clearFields);
     $("btn-copy").addEventListener("click", copy);
     $("btn-export").addEventListener("click", exportFile);

@@ -253,6 +253,21 @@ textarea:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus)
 }
 .ghost-tip kbd { font-size: 11px; padding: 0 5px; }
 
+/* Botón ∑ en la esquina inferior derecha de la caja: abre el editor de ecuaciones */
+.field-tool {
+  position: absolute; right: 8px; bottom: 8px; z-index: 2;
+  appearance: none; border: 0; cursor: pointer; padding: 0;
+  width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px;
+  font-family: "Times New Roman", "STIX Two Math", serif; font-size: 17px; line-height: 1;
+  background: transparent; color: var(--text-3);
+  transition: background-color .15s ease, color .15s ease;
+}
+.field-tool:hover { background: var(--hover); color: var(--text); }
+.input-wrap:focus-within .field-tool { color: var(--link); }
+/* El texto no pasa por debajo del botón; la predicción se corre a su izquierda */
+.has-tool textarea { padding-right: 40px; }
+.has-tool .ghost-accept, .has-tool .ghost-tip { right: 42px; }
+
 .form-actions { padding-top: 16px; }
 .form-actions .link-btn { color: var(--text-2); }
 .form-actions .link-btn:hover { color: var(--text); text-decoration: none; }
@@ -319,6 +334,68 @@ footer { background: var(--bg-alt); color: var(--text-2); font-size: 12px; line-
 .shortcuts .stack-label { margin-bottom: 4px; }
 kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1px 6px; color: var(--text); background: var(--seg-track); }
 .dialog-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
+
+/* ===================== EDITOR DE ECUACIONES ===================== */
+.dialog-wide { width: min(640px, calc(100vw - 32px)); }
+.dialog-wide .dialog-title { margin-bottom: 16px; }
+.math-tabs { display: flex; width: 100%; overflow-x: auto; scrollbar-width: none; }
+.math-tabs::-webkit-scrollbar { display: none; }
+.math-tabs button {
+  appearance: none; border: 0; margin: 0; height: 28px; padding: 0 12px; border-radius: 7px; cursor: pointer; flex: 1 0 auto;
+  background: transparent; color: var(--text); font-size: 13px; letter-spacing: -0.01em; transition: background-color .15s ease;
+}
+.math-tabs button[aria-selected="true"] { background: var(--seg-on); font-weight: 600; box-shadow: 0 0 0 0.5px var(--seg-on-ring), 0 1px 2px rgba(0,0,0,.06); }
+.math-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 14px; min-height: 34px; }
+.math-chip {
+  appearance: none; border: 0; cursor: pointer; min-width: 40px; height: 34px; padding: 0 10px; border-radius: 9px;
+  font-family: "Times New Roman", "STIX Two Math", serif; font-size: 17px; letter-spacing: 0;
+  background: var(--seg-track); color: var(--text); transition: background-color .15s ease, transform .1s ease;
+}
+.math-chip:hover { background: var(--btn-hover); }
+.math-chip:active { transform: scale(0.96); }
+
+.math-editor math-field, .math-latex {
+  display: block; width: 100%; min-height: 76px;
+  background: var(--field); color: var(--text);
+  border: 1px solid var(--rule); border-radius: 12px; outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.math-editor math-field {
+  padding: 14px 16px; font-size: 26px;
+  --caret-color: var(--button);
+  --selection-background-color: rgba(0, 113, 227, 0.22);
+  --selection-color: var(--text);
+  --contains-highlight-background-color: var(--hover);
+  --placeholder-color: var(--link);
+  --smart-fence-color: var(--text-3);
+}
+.math-editor math-field:focus-within, .math-latex:focus { border-color: var(--button); box-shadow: 0 0 0 3px var(--focus); }
+.math-editor math-field:focus-visible { outline: none; }
+.math-editor math-field::part(menu-toggle) { color: var(--text-2); }
+.math-latex { font-family: var(--mono); font-size: 15px; line-height: 1.5; padding: 12px 14px; resize: vertical; }
+.math-status { margin-top: 10px; font-size: 14px; color: var(--text-2); }
+
+.math-out { margin-top: 18px; }
+.math-out-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.math-out-head .stack-label { margin: 0; }
+.math-code {
+  margin: 0; padding: 12px 14px; min-height: 46px; max-height: 140px; overflow: auto;
+  background: var(--tile); border-radius: 10px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.55; letter-spacing: 0;
+  white-space: pre-wrap; word-break: break-word; color: var(--text);
+}
+.math-code.is-empty { color: var(--text-3); font-family: var(--font); font-size: 14px; }
+.dialog-wide .dialog-actions { gap: 8px; margin-top: 20px; }
+
+@media (max-width: 734px) {
+  .dialog-wide .dialog-inner { padding: 22px 18px; }
+  .math-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -18px; padding-right: 18px; }
+  .math-chips::-webkit-scrollbar { display: none; }
+  .math-chip { flex: 0 0 auto; height: 40px; min-width: 44px; }
+  .math-editor math-field { font-size: 22px; }
+  .math-latex { font-size: 16px; }
+  .field-tool { width: 36px; height: 36px; right: 4px; bottom: 4px; }
+}
 
 .toast {
   position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);

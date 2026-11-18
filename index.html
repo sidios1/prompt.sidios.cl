@@ -18,7 +18,7 @@
     } catch (e) {}
   </script>
 
-  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17t">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-11-18b">
 </head>
 <body>
 
@@ -158,6 +158,7 @@
         <div><kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> Copiar prompt</div>
         <div><kbd>Ctrl/⌘</kbd> + <kbd>S</kbd> Exportar</div>
         <div><kbd>Alt</kbd> + <kbd>N</kbd> Nuevo prompt</div>
+        <div><kbd>Alt</kbd> + <kbd>M</kbd> Insertar ecuación</div>
         <div><kbd>Tab</kbd> Aceptar la predicción</div>
         <div><kbd>→</kbd> Aceptar la palabra siguiente</div>
         <div><kbd>Esc</kbd> Descartar la predicción</div>
@@ -169,15 +170,50 @@
     </form>
   </dialog>
 
+  <!-- ===== Editor de ecuaciones ===== -->
+  <dialog id="math" class="dialog dialog-wide" aria-labelledby="math-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="math-title" class="dialog-title">Ecuación</h2>
+        <button type="button" class="icon-btn dialog-close" id="math-close" aria-label="Cerrar editor de ecuaciones" title="Cerrar">×</button>
+      </div>
+
+      <div class="seg math-tabs" role="tablist" aria-label="Plantillas" id="math-tabs"></div>
+      <div class="math-chips" id="math-chips" aria-label="Insertar plantilla"></div>
+
+      <div class="math-editor" id="math-editor">
+        <textarea id="math-latex" class="math-latex" rows="3" spellcheck="false" placeholder="\frac{a}{b}" aria-label="Fórmula en LaTeX" hidden></textarea>
+      </div>
+      <p class="math-status" id="math-status" role="status" hidden></p>
+
+      <div class="math-out">
+        <div class="math-out-head">
+          <span class="stack-label">Código para la IA</span>
+          <div class="seg math-mode" role="radiogroup" aria-label="Formato de la ecuación" id="math-mode">
+            <button type="button" role="radio" data-mode="inline">En línea</button>
+            <button type="button" role="radio" data-mode="block">Bloque</button>
+          </div>
+        </div>
+        <pre class="math-code" id="math-code"></pre>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="math-cancel">Cancelar</button>
+        <button type="button" class="btn primary" id="math-insert">Insertar</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="sr-only" id="announcer" role="status" aria-live="polite"></div>
 
-  <script src="assets/analytics.js?v=2026-11-17i"></script>
-  <script src="assets/data.js?v=2026-11-17i"></script>
-  <script src="assets/lexicon-freq.js?v=2026-11-17i"></script>
-  <script src="assets/lexicon.js?v=2026-11-17i"></script>
-  <script src="assets/engine.js?v=2026-11-17i"></script>
-  <script src="assets/app.js?v=2026-11-17i"></script>
+  <script src="assets/analytics.js?v=2026-11-18b"></script>
+  <script src="assets/data.js?v=2026-11-18b"></script>
+  <script src="assets/lexicon-freq.js?v=2026-11-18b"></script>
+  <script src="assets/lexicon.js?v=2026-11-18b"></script>
+  <script src="assets/engine.js?v=2026-11-18b"></script>
+  <script src="assets/math.js?v=2026-11-18b"></script>
+  <script src="assets/app.js?v=2026-11-18b"></script>
   <script>
     // Transición entre páginas de sidios.cl: fundido antes de navegar a otra página del sitio
     (function () {

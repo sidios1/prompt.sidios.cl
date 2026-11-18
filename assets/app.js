@@ -237,7 +237,18 @@
         onclick: () => acceptGhost(f.id, false),
       });
       const tip = el("span", { class: "ghost-tip", "aria-hidden": "true", hidden: true }, [el("kbd", { text: "Tab" }), " completa"]);
-      const wrap = el("div", { class: "input-wrap" }, [ta, layer, accept, tip]);
+      // Botón ∑ en la esquina inferior derecha de la caja: abre el editor de ecuaciones (también Alt+M).
+      const mathBtn = f.id === "rol" || !window.PF_MATH ? null : el("button", {
+        type: "button", class: "field-tool", text: "∑",
+        title: "Insertar ecuación (Alt+M)", "aria-label": `Insertar ecuación en «${f.title}»`,
+        "aria-keyshortcuts": "Alt+M",
+        onmousedown: (ev) => ev.preventDefault(), // conserva el cursor del campo
+        onpointerenter: () => window.PF_MATH.preload(),
+        onfocus: () => window.PF_MATH.preload(),
+        onclick: () => editMath(f.id),
+      });
+      const wrap = el("div", { class: "input-wrap" + (mathBtn ? " has-tool" : "") }, [ta, layer, accept, tip, mathBtn]);
+      if (mathBtn) ta.addEventListener("focus", () => { lastMathField = f.id; });
       host.append(el("div", { class: "field", id: "field-" + f.id }, [
         el("div", { class: "field-head" }, [
           el("label", { for: "f-" + f.id }, [
@@ -301,6 +312,44 @@
     ta.value = value;
     focusTextarea(field);
     onInput(field);
+  }
+
+  // ---------- Ecuaciones ----------
+  let lastMathField = "contexto"; // campo donde abre Alt+M si el foco no está en uno con ecuaciones
+  function mathShortcut() {
+    if (!window.PF_MATH || document.querySelector("dialog[open]")) return;
+    const id = document.activeElement && document.activeElement.id;
+    const field = id && id.startsWith("f-") && id !== "f-rol" ? id.slice(2) : lastMathField;
+    if (fieldRefs[field]) editMath(field);
+  }
+
+  // Abre el editor visual; si el cursor está dentro de una fórmula $…$ / $$…$$, la edita y la reemplaza.
+  async function editMath(field) {
+    const M = window.PF_MATH;
+    const ta = fieldRefs[field].ta;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const hit = M.findAt(ta.value, start);
+    clearGhost();
+    const res = await M.open(hit ? { latex: hit.latex, display: hit.display } : { display: true });
+    if (!fieldRefs[field] || fieldRefs[field].ta !== ta) return; // se cambió de prompt mientras tanto
+    if (!res) { ta.focus(); ta.setSelectionRange(start, end); return; }
+    const a = hit ? hit.start : start, b = hit ? hit.end : end;
+    const before = ta.value.slice(0, a), after = ta.value.slice(b);
+    let code = M.wrap(res.latex, res.display);
+    if (res.display) {
+      if (before && !before.endsWith("\n")) code = "\n" + code;
+      if (after && !after.startsWith("\n")) code += "\n";
+    } else {
+      if (before && !/\s$/.test(before)) code = " " + code;
+      if (after && !/^[\s.,;:!?)]/.test(after)) code += " ";
+    }
+    ta.value = before + code + after;
+    const caret = before.length + code.length;
+    ta.focus();
+    ta.setSelectionRange(caret, caret);
+    onInput(field);
+    announce(hit ? "Ecuación actualizada" : "Ecuación insertada");
+    track("insertar_ecuacion", { campo: field, modo: res.display ? "bloque" : "en_linea", edicion: !!hit });
   }
 
   // ---------- Predicción en línea (texto fantasma) ----------
@@ -655,6 +704,7 @@
       if (mod && ev.key === "Enter") { ev.preventDefault(); copy(); }
       else if (mod && !ev.shiftKey && ev.key.toLowerCase() === "s") { ev.preventDefault(); exportFile(); }
       else if (ev.altKey && !mod && ev.code === "KeyN") { ev.preventDefault(); newPrompt(); }
+      else if (ev.altKey && !mod && !ev.shiftKey && ev.code === "KeyM") { ev.preventDefault(); mathShortcut(); }
       else if (ev.key === "Escape" && $("history").classList.contains("open")) closeDrawer();
     });
 

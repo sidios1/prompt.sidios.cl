@@ -5,6 +5,7 @@ Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto ·
 - Sitio estático (HTML/CSS/JS sin build) publicado con GitHub Pages en `https://prompt.sidios.cl`.
 - Estética de [sidios.cl](https://sidios.cl): estilo Apple, tipografía del sistema (SF Pro), azul `#0071e3` y modo oscuro automático.
 - Los prompts se guardan solo en el `localStorage` del navegador.
+- Editor visual de ecuaciones (botón «∑ Ecuación» en cada campo salvo Rol): usa [MathLive](https://github.com/arnog/mathlive) (MIT), cargado desde jsDelivr solo al abrirlo, e inserta la fórmula como LaTeX entre `$…$` o `$$…$$`. Sin conexión al CDN cae a un campo de LaTeX.
 
 ## Estructura
 
@@ -15,6 +16,7 @@ Versión web de PromptForge: arma prompts con la estructura **Rol · Contexto ·
 | `assets/data.js` | Catálogo de frases por ámbito |
 | `assets/lexicon-freq.js` | ~32.000 palabras del español por frecuencia (generado) |
 | `assets/lexicon.js` | Vocabulario propio: prompts, profesiones y términos técnicos |
+| `assets/math.js` | Editor visual de ecuaciones (MathLive) y conversión a LaTeX |
 | `assets/engine.js` | Detección de ámbito, modelo predictivo (vocabulario y n-gramas) y armado del prompt |
 | `assets/app.js` | Estado, historial e interfaz |
 

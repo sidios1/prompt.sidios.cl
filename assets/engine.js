@@ -380,6 +380,8 @@
 
   // ---------- Armado ----------
   function bulleted(text) {
+    // Una ecuación en bloque ($$…$$ en varias líneas) queda entera en una sola viñeta.
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => "$$ " + m.trim().replace(/\s*\n\s*/g, " ") + " $$");
     return text.split("\n").filter((l) => l.length)
       .map((line) => {
         let s = line.replace(/^[ \t]*/, "");

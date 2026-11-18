@@ -27,6 +27,7 @@
   --nav-h: 48px;
   --gutter: 22px;
   --max: 1180px;
+  --nav-max: 980px;
   color-scheme: light dark;
 }
 
@@ -115,14 +116,16 @@ textarea:focus-visible, select:focus-visible, .search:focus-visible { outline: n
   backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--nav-rule);
 }
-.nav-inner { height: 100%; display: flex; align-items: center; gap: 20px; }
+/* Mismas medidas que la barra de sidios.cl: contenedor de 980 px (1068 px en pantallas grandes),
+   margen lateral de 22 px (20 px en móvil), separación de 24 px y enlaces cada 32 px. */
+.nav .nav-inner { max-width: calc(var(--nav-max) + var(--gutter) * 2); height: 100%; display: flex; align-items: center; gap: 24px; }
 .nav-brand { color: var(--text); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
 .nav-app { color: var(--text-2); font-size: 14px; letter-spacing: -0.016em; }
 .nav-brand:hover, .nav-app:hover { text-decoration: none; }
-.nav-links { display: flex; gap: 28px; margin-left: auto; }
+.nav-links { display: flex; gap: 32px; margin-left: auto; }
 .nav-btn {
   appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
-  font-size: 13px; letter-spacing: -0.01em; color: var(--text); opacity: 0.88;
+  font-size: 12px; letter-spacing: -0.01em; color: var(--text); opacity: 0.8;
   line-height: var(--nav-h); white-space: nowrap; transition: opacity .15s ease;
 }
 .nav-btn:hover { opacity: 1; }
@@ -348,8 +351,12 @@ kbd { font-family: var(--font); font-size: 12px; border-radius: 5px; padding: 1p
   .preview-inner { max-height: none; }
 }
 
+@media (min-width: 1441px) {
+  :root { --nav-max: 1068px; }
+}
+
 @media (max-width: 734px) {
-  .nav-inner { gap: 14px; }
+  :root { --gutter: 20px; }
   .nav-links { gap: 18px; }
   .field { padding: 24px 0; }
   .field-title { font-size: 21px; line-height: 1.19; }

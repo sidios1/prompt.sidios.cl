@@ -18,7 +18,7 @@
     } catch (e) {}
   </script>
 
-  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17i">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-11-17t">
 </head>
 <body>
 
@@ -178,5 +178,27 @@
   <script src="assets/lexicon.js?v=2026-11-17i"></script>
   <script src="assets/engine.js?v=2026-11-17i"></script>
   <script src="assets/app.js?v=2026-11-17i"></script>
+  <script>
+    // Transición entre páginas de sidios.cl: fundido antes de navegar a otra página del sitio
+    (function () {
+      var root = document.documentElement;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest && e.target.closest('a[href]');
+        if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+        var url = new URL(a.href, location.href);
+        var ours = url.hostname === location.hostname || /(^|\.)sidios\.cl$/.test(url.hostname);
+        if (!ours || !/^https?:$/.test(url.protocol)) return;
+        if (url.origin === location.origin && url.pathname === location.pathname && url.search === location.search) return;
+        e.preventDefault();
+        root.classList.add('is-leaving');
+        window.setTimeout(function () { location.href = url.href; }, 220);
+      });
+      window.addEventListener('pageshow', function (e) {
+        if (e.persisted) root.classList.remove('is-leaving');
+      });
+    })();
+  </script>
 </body>
 </html>
